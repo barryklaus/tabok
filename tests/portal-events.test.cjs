@@ -6,6 +6,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const bridge=fs.readFileSync(path.join(root,'portal-events.js'),'utf8');
 const multiplayer=fs.readFileSync(path.join(root,'multiplayer.js'),'utf8');
+const balance=require('../balance-rules.js');
 const event={id:'host-session-1',type:'rejection',actor:{id:'P1',kind:'player',pos:'PORTAL',charId:'misty',name:'Custom Name'},destination:'0,0'};
 
 function context(board){
@@ -230,7 +231,7 @@ test('Gilded Fate uses reference-matched treasure art and engraved symbol dice',
   assert.match(html,new RegExp(asset.replaceAll('.','\\.')));
   assert.ok(fs.existsSync(path.join(root,asset)),`${name} production icon must exist`);
  }
- assert.match(html,/true3d-dice\.js\?v=20260910B1/);
+ assert.match(html,/true3d-dice\.js\?v=20260910D1/);
  assert.match(dice,/Celestial face plate/);
  assert.match(dice,/new Path2D\('M86 28H426/);
  assert.match(dice,/context\.fillText\(String\(value\),256,264\)/);
@@ -316,4 +317,16 @@ test('Flexible Offering combines rituals, permits discard and keeps monster trav
  assert.doesNotMatch(activation,/focusOn/);
  assert.match(network,/offerDiscard/);
  assert.match(network,/guidance:\{className:els\.guidance\.className/);
+});
+
+test('Six-direction monsters and the physical Offer D20 are wired into the live board',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const dice=fs.readFileSync(path.join(root,'true3d-dice.js'),'utf8');
+ assert.deepEqual(balance.HEX_DIRECTION_D6.map(face=>face.edge),['A','B','C','D','E','F']);
+ assert.match(html,/function rollHiddenDirection\(\)/);
+ assert.match(html,/faceMonsterForDirection\(m,direction\)/);
+ assert.match(html,/planMonsterGlide\(m,roll\.distance,direction\.edge\)/);
+ assert.match(dice,/buildOfferDie\(x, faceLabels=null\)/);
+ assert.match(dice,/new THREE\.IcosahedronGeometry\(1\.46,0\)/);
+ assert.match(html,/type==='OFFER'\?\[offerSpec\]/);
 });

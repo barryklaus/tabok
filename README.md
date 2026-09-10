@@ -1,6 +1,11 @@
 # TABOK — The Crossing
 
-Version: **v1.2.0 — Flexible Offering · 2026.09.10.C1**
+Version: **v1.3.0 — Six Directions · 2026.09.10.D1**
+
+## v1.3.0 — Six Directions
+
+- Minor and Major Monsters now cast a hidden Direction D6 before moving. Results 1–6 map clockwise to labeled hex edges A–F; the miniature turns toward that edge before its uninterrupted glide.
+- The Offering die is now a true 3D engraved D20: dark ruin stone, antique-bronze edges, twenty triangular numbered faceplates, and result-only amber illumination.
 
 ## v1.2.0 — Flexible Offering
 

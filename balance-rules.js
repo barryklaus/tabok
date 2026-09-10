@@ -7,6 +7,14 @@
 
   const TURN_TYPES=Object.freeze({NORMAL:'NORMAL',RUNE:'RUNE',OFFER:'OFFER'});
   const MOVEMENT_D6=Object.freeze([1,2,3,4,5,6]);
+  const HEX_DIRECTION_D6=Object.freeze([
+    Object.freeze({roll:1,edge:'A',label:'North'}),
+    Object.freeze({roll:2,edge:'B',label:'North-east'}),
+    Object.freeze({roll:3,edge:'C',label:'South-east'}),
+    Object.freeze({roll:4,edge:'D',label:'South'}),
+    Object.freeze({roll:5,edge:'E',label:'South-west'}),
+    Object.freeze({roll:6,edge:'F',label:'North-west'})
+  ]);
   const TREASURE_D6=Object.freeze(['RELIC','ODDITY','KEEPSAKE','BLANK','BLANK','BLANK']);
   const OFFER_D20=Object.freeze({ONE:[1,10],TWO:[11,20]});
   const RUNE_FAMILIES=Object.freeze({
@@ -108,7 +116,7 @@
   function rollFace(faces,random=Math.random){return faces[Math.min(faces.length-1,Math.floor((Number(random())||0)*faces.length))]}
 
   return{
-    VERSION:'3.2',TURN_TYPES,MOVEMENT_D6,TREASURE_D6,OFFER_D20,RUNE_FAMILIES,MINOR_CHAOS_D6,MAJOR_CHAOS_D6,
+    VERSION:'3.3',TURN_TYPES,MOVEMENT_D6,HEX_DIRECTION_D6,TREASURE_D6,OFFER_D20,RUNE_FAMILIES,MINOR_CHAOS_D6,MAJOR_CHAOS_D6,
     normalizeInventory,inventorySpread,crossingProbability,portalAwakeningCount,offerTransferCount,lastChance,
     minorMonsterRoll,majorMonsterRoll,rollFace
   };

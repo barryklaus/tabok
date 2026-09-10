@@ -10,8 +10,19 @@ const FACE_SETS = {
   Movement: ['1', '2', '3', '4', '5', '6'],
   Treasure: ['RELIC', 'ODDITY', 'KEEPSAKE', 'BLANK', 'BLANK', 'BLANK'],
   Action: ['TAKE', 'TAKE', 'TAKE', 'GIVE', 'GIVE', 'STEAL'],
-  Rune: ['×2', '×3', 'SWAP', 'PLUNDER', 'RIFT', 'WILD']
+  Rune: ['×2', '×3', 'SWAP', 'PLUNDER', 'RIFT', 'WILD'],
+  Offer: Array.from({length:20},(_,index)=>String(index+1))
 };
+
+function offerFaceTexture(label) {
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=192;
+  const context=canvas.getContext('2d');context.clearRect(0,0,192,192);context.translate(96,96);context.lineJoin='round';
+  context.beginPath();context.moveTo(0,-78);context.lineTo(70,44);context.lineTo(-70,44);context.closePath();context.fillStyle='rgba(10,8,7,.88)';context.fill();context.strokeStyle='#9b7138';context.lineWidth=7;context.stroke();
+  context.beginPath();context.moveTo(0,-64);context.lineTo(57,35);context.lineTo(-57,35);context.closePath();context.strokeStyle='rgba(231,184,101,.56)';context.lineWidth=2;context.stroke();
+  context.fillStyle='#f2cf8a';context.shadowColor='#d78b35';context.shadowBlur=7;context.font='58px Georgia, "Times New Roman", serif';context.textAlign='center';context.textBaseline='middle';context.fillText(String(label),0,4);
+  context.shadowBlur=0;context.fillStyle='#d5a55e';[[0,-58],[49,28],[-49,28]].forEach(([x,y])=>{context.save();context.translate(x,y);context.rotate(Math.PI/4);context.fillRect(-3,-3,6,6);context.restore()});
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;return texture;
+}
 
 function faceTexture(label, kind, faceIndex = 0) {
   const canvas = document.createElement('canvas');
@@ -216,8 +227,9 @@ export class TabokDice3D {
 
   supports(specs) {
     const runeOnly=specs?.length===1&&specs[0].label==='Rune';
-    const turnCast=specs?.length===2&&specs[0].label==='Movement'&&['Treasure','Rune'].includes(specs[1].label);
-    return (runeOnly||turnCast)&&specs.every(spec=>spec.rolling!==false);
+    const offerOnly=specs?.length===1&&specs[0].label==='Offer';
+    const turnCast=(specs?.length===2||specs?.length===3)&&specs[0].label==='Movement'&&['Treasure','Rune'].includes(specs[1].label)&&(specs.length===2||specs[2].label==='Offer');
+    return (runeOnly||offerOnly||turnCast)&&specs.every(spec=>spec.rolling!==false);
   }
 
   clearDice() {
@@ -242,6 +254,7 @@ export class TabokDice3D {
   }
 
   buildDice(kind, x, faceLabels=null) {
+    if(kind==='Offer')return this.buildOfferDie(x,faceLabels);
     const {labels,materials} = this.dieResource(kind,faceLabels);
     materials.forEach(material=>{material.emissive.set(0x000000);material.emissiveIntensity=0});
     const die = new THREE.Mesh(this.dieGeometry, materials);
@@ -249,11 +262,31 @@ export class TabokDice3D {
     this.scene.add(die); this.dice.push(die); return die;
   }
 
+  buildOfferDie(x, faceLabels=null) {
+    const labels=(faceLabels?.length===20?faceLabels:FACE_SETS.Offer).map(String);
+    const geometry=new THREE.IcosahedronGeometry(1.46,0),body=new THREE.MeshStandardMaterial({color:0x17110d,roughness:.64,metalness:.28});
+    const die=new THREE.Group(),stone=new THREE.Mesh(geometry,body);stone.castShadow=true;stone.receiveShadow=true;die.add(stone);
+    die.add(new THREE.LineSegments(new THREE.EdgesGeometry(geometry,16),new THREE.LineBasicMaterial({color:0xb48342,transparent:true,opacity:.9})));
+    const source=geometry.index?geometry.toNonIndexed():geometry,positions=source.attributes.position,faceNormals=[],resultMaterials=[];
+    for(let face=0;face<20;face++){
+      const a=new THREE.Vector3().fromBufferAttribute(positions,face*3),b=new THREE.Vector3().fromBufferAttribute(positions,face*3+1),c=new THREE.Vector3().fromBufferAttribute(positions,face*3+2),center=a.clone().add(b).add(c).multiplyScalar(1/3),normal=new THREE.Vector3().crossVectors(b.clone().sub(a),c.clone().sub(a)).normalize();
+      if(normal.dot(center)<0)normal.negate();faceNormals.push(normal.clone());
+      const texture=offerFaceTexture(labels[face]),material=new THREE.MeshStandardMaterial({map:texture,emissiveMap:texture,emissive:0x000000,emissiveIntensity:0,transparent:true,depthWrite:false,roughness:.48,metalness:.18,side:THREE.DoubleSide});
+      const decal=new THREE.Mesh(new THREE.PlaneGeometry(.78,.78),material);decal.position.copy(center.clone().add(normal.clone().multiplyScalar(.018)));decal.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),normal);die.add(decal);resultMaterials.push(material);
+    }
+    die.position.set(x,1.35,0);die.userData={kind:'Offer',labels,faceNormals,resultMaterials};this.scene.add(die);this.dice.push(die);return die;
+  }
+
+  resetDieGlow(die) {
+    const materials=die.userData.resultMaterials||(Array.isArray(die.material)?die.material:[]);
+    materials.forEach(material=>{material.emissive?.set(0x000000);material.emissiveIntensity=0});
+  }
+
   prepare(specs, color = '#9d62d4') {
     if (!this.supports(specs)) return false;
     const signature=specs.map(spec=>spec.label+':'+(spec.faces||[]).join(',')).join('|');
     if(signature===this.preparedSignature&&this.dice.length===specs.length){
-      this.dice.forEach(die=>die.material.forEach(material=>{material.emissive.set(0x000000);material.emissiveIntensity=0}));
+      this.dice.forEach(die=>this.resetDieGlow(die));
       this.key.color.set(color);this.canvas.dataset.diceCount=String(specs.length);this.canvas.classList.add('active');this.resize();return true;
     }
     this.clearDice(); this.key.color.set(color);
@@ -266,7 +299,8 @@ export class TabokDice3D {
   targetQuaternion(die, result, index) {
     const face = resultFaceIndex(die.userData.labels, result);
     die.userData.resultFace = face;
-    const align = new THREE.Quaternion().setFromUnitVectors(FACE_NORMALS[face], new THREE.Vector3(0, 1, 0));
+    const normal=die.userData.faceNormals?.[face]||FACE_NORMALS[face];
+    const align = new THREE.Quaternion().setFromUnitVectors(normal, new THREE.Vector3(0, 1, 0));
     const turns = this.dice.length === 3 ? [.16,0,-.16] : this.dice.length === 2 ? [.14,-.16] : [0];
     const turn = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turns[index]);
     return turn.multiply(align);
@@ -302,8 +336,8 @@ export class TabokDice3D {
         if (t < 1) requestAnimationFrame(frame); else {
           this.dice.forEach((die, index) => {
             die.position.set(landings[index],1.05,0); die.quaternion.copy(starts[index].target);
-            const material = die.material[die.userData.resultFace];
-            material.emissive.set(die.userData.kind === 'Movement' ? 0xffaa38 : die.userData.kind === 'Rune' ? 0x50e8ff : 0xd45aff); material.emissiveIntensity = 1.45;
+            const material = die.userData.resultMaterials?.[die.userData.resultFace]||die.material?.[die.userData.resultFace];
+            material?.emissive?.set(die.userData.kind === 'Movement' ? 0xffaa38 : die.userData.kind === 'Rune' ? 0x50e8ff : die.userData.kind==='Offer'?0xf0a84a:0xd45aff); if(material)material.emissiveIntensity = die.userData.kind==='Offer'?2.1:1.45;
           });
           this.canvas.classList.remove('casting'); this.canvas.classList.add('revealed'); this.render(); resolve(true);
         }

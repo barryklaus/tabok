@@ -1430,6 +1430,16 @@ export class TabokTrue3DBoard {
     visual.userData.activationUntil=performance.now()+1500;
   }
 
+  faceActor(id, from, to, duration = 180) {
+    const actor=this.actors.get(id),visual=actor?.userData.visual3D;
+    if(!actor||!visual)return Promise.resolve();
+    const start=worldFor(from),end=worldFor(to),target=Math.atan2(end.x-start.x,end.z-start.z);
+    const prior=Number.isFinite(actor.userData.heading)?actor.userData.heading:target;
+    const delta=Math.atan2(Math.sin(target-prior),Math.cos(target-prior)),begun=performance.now();
+    actor.userData.heading=target;actor.userData.hasTravelHeading=true;
+    return new Promise(resolve=>{const step=now=>{const t=Math.min(1,(now-begun)/Math.max(1,duration)),eased=1-Math.pow(1-t,3);visual.rotation.y=prior+delta*eased;if(t<1)requestAnimationFrame(step);else{visual.rotation.y=target;resolve()}};requestAnimationFrame(step)});
+  }
+
 
   animateActor(id, from, to, duration = 320, traversal = {}) {
     const actor = this.actors.get(id);
