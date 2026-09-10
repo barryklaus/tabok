@@ -129,30 +129,42 @@ function hood(root,m) {
 }
 function handsAndSleeves(root,m,index) {
   for(const side of [-1,1]) {
-    // Bent forearms disappear into voluminous suspended sleeves.
-    tube(root,m.stone,[[side*.32,2.22,.02],[side*.405,2.02,.12],[side*.29,1.87,.34],[side*.18,1.92,.40]],[.115,.137,.109,.066],10);
-    surface(root,m.mantle,28,24,(v,u)=>{
-      const a=u*Math.PI*2,w=.092+(1-v)*.03;
-      return [side*(.32+v*.012)+Math.sin(a)*w*(1-v*.28),1.97-v*1.28+.04*Math.cos(a),.18+Math.cos(a)*(.15-v*.095)+Math.cos(a*7)*.009];
+    const sword=index===1,px=side*(sword?.07:.153),py=sword?1.99+(side<0?.07:0):1.93,pz=.47;
+    // Adult anatomy under the cloth: a long descending upper arm, low elbow,
+    // then an independently angled forearm rising towards the held relic.
+    const points=[[side*.30,2.23,.015],[side*.38,1.99,.035],[side*.425,1.72,.105],[side*.34,1.77,.285],[px+side*.075,py-.025,pz-.045]];
+    const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
+    const frames=curve.computeFrenetFrames(40,false);
+    surface(root,m.mantle,30,24,(v,u)=>{
+      const center=curve.getPointAt(v),frame=Math.min(40,Math.round(v*40)),a=u*Math.PI*2;
+      const r=THREE.MathUtils.lerp(.113,.073,v)+Math.sin(v*Math.PI)*.007;
+      const pleat=1+Math.cos(a*9+v*1.4)*.105+Math.cos(a*15-v*3)*.033;
+      return center.addScaledVector(frames.normals[frame],Math.cos(a)*r*pleat).addScaledVector(frames.binormals[frame],Math.sin(a)*r*pleat).toArray();
     });
-    for(let j=0;j<4;j++) {
-      const x=side*(.26+j*.035);
-      line(root,j===0?m.edge:m.fold,[[x,1.92,.329],[x+side*.014,1.45,.278],[x+side*.012,.72+j*.016,.226]],j===0?.009:.007);
-    }
-    // Creased cloth follows the bend of each forearm and fans into the cuff.
+    // Weighty open bell sleeves fall from the forearms rather than inflating
+    // the limb into a smooth rounded tube. Front and back are sculpted.
+    for(const back of [false,true]) surface(root,m.mantle,24,20,(v,u)=>{
+      const x=side*(.235+u*.195+v*.015),top=1.905-u*.185;
+      const z=.40-u*.25-(back?.065:0);
+      return [x,top-v*(1.10-u*.07),z+.018*Math.cos(u*Math.PI*12)*(0.4+v)-v*.015];
+    });
     for(let j=0;j<5;j++) {
-      const offset=j*.023;
-      line(root,m.fold,[[side*(.32+offset*.4),2.21-offset,.125],[side*(.43+offset*.18),2.02-offset*.35,.21],[side*(.32-offset*.3),1.905-offset*.2,.405]],.006);
+      const u=j/4,x=side*(.235+u*.195),top=1.905-u*.185,z=.40-u*.25;
+      line(root,j===0?m.edge:m.fold,[[x,top,z+.009],[x+side*.007,top-.48,z+.015],[x+side*.015,top-1.1+u*.07,z]],j===0?.007:.004);
     }
-    const sword=index===1,px=side*(sword?.065:.155),py=sword?1.97+(side<0?.075:0):1.91,pz=.419;
-    orb(root,m.stone,[px,py,pz],[.087,.041,.065],12);
+    // A small sculpted cuff surrounds the wrist; fingers are stone, not wire.
+    const cuff=ring(root,m.edge,.079,.008,[px+side*.067,py-.018,pz-.039],[0,side*.9,0],24);cuff.scale.y=.84;
+    tube(root,m.stone,[[px+side*.073,py-.018,pz-.04],[px+side*.025,py,pz+.004]],[.053,.058],10);
+    orb(root,m.stone,[px,py,pz],[.098,.05,.079],16);
     for(let f=0;f<4;f++) {
-      const fx=px+side*(f-1.5)*.025;
-      tube(root,m.edge,[[fx,py,pz+.035],[fx-side*.018,py+.026,pz+.082],[fx-side*.035,py+.067,pz+.084]],[.013,.010,.008],5);
+      const fx=px+side*(f-1.5)*.031,reach=[.084,.107,.104,.081][f];
+      tube(root,m.stone,[[fx,py-.006,pz+.024],[fx-side*.012,py+.005,pz+reach],[fx-side*.027,py+.049,pz+reach+.009],[fx-side*.036,py+.081,pz+reach-.012]],[.019,.017,.014,.010],7);
+      line(root,m.fold,[[fx-side*.004,py+.015,pz+reach-.014],[fx-side*.018,py+.019,pz+reach-.008]],.0025);
     }
-    tube(root,m.stone,[[px+side*.057,py+.01,pz],[px+side*.03,py+.06,pz+.015],[px,py+.079,pz+.02]],[.021,.018,.012],6);
+    tube(root,m.stone,[[px+side*.075,py+.005,pz-.019],[px+side*.074,py+.071,pz+.015],[px+side*.038,py+.112,pz+.035],[px+side*.012,py+.105,pz+.046]],[.028,.025,.020,.012],8);
   }
 }
+
 function halo(root,m,index) {
   const g=new THREE.Group();g.name='Bronze halo';g.position.set(0,2.71,-.13);root.add(g);
   const r=.43;
@@ -180,7 +192,7 @@ function halo(root,m,index) {
   return g;
 }
 function relic(root,m,index) {
-  const g=new THREE.Group();g.name=GUARDIANS[index].relic;g.position.set(0,2.06,.435);root.add(g);
+  const g=new THREE.Group();g.name=GUARDIANS[index].relic;g.position.set(0,2.075,.50);root.add(g);
   if(index===0) {
     orb(g,m.obsidian,[0,0,0],[.145,.145,.145],28);
     ring(g,m.bronze,.133,.009,[0,0,0],[Math.PI/2,0,0],32);

@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { faceTexture, offerFaceTexture, DICE_PALETTES, preloadTreasureIcons } from './dice-reference-art.js?v=20260910G2';
+await preloadTreasureIcons();
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 const FACE_NORMALS = [
@@ -13,165 +15,6 @@ const FACE_SETS = {
   Rune: ['×2', '×3', 'SWAP', 'PLUNDER', 'RIFT', 'WILD'],
   Offer: Array.from({length:20},(_,index)=>String(index+1))
 };
-
-function offerFaceTexture(label) {
-  const canvas=document.createElement('canvas');canvas.width=canvas.height=192;
-  const context=canvas.getContext('2d');context.clearRect(0,0,192,192);context.translate(96,96);context.lineJoin='round';
-  context.beginPath();context.moveTo(0,-78);context.lineTo(70,44);context.lineTo(-70,44);context.closePath();context.fillStyle='rgba(10,8,7,.88)';context.fill();context.strokeStyle='#9b7138';context.lineWidth=7;context.stroke();
-  context.beginPath();context.moveTo(0,-64);context.lineTo(57,35);context.lineTo(-57,35);context.closePath();context.strokeStyle='rgba(231,184,101,.56)';context.lineWidth=2;context.stroke();
-  context.fillStyle='#f2cf8a';context.shadowColor='#d78b35';context.shadowBlur=7;context.font='58px Georgia, "Times New Roman", serif';context.textAlign='center';context.textBaseline='middle';context.fillText(String(label),0,4);
-  context.shadowBlur=0;context.fillStyle='#d5a55e';[[0,-58],[49,28],[-49,28]].forEach(([x,y])=>{context.save();context.translate(x,y);context.rotate(Math.PI/4);context.fillRect(-3,-3,6,6);context.restore()});
-  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;return texture;
-}
-
-function faceTexture(label, kind, faceIndex = 0) {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 512;
-  const context = canvas.getContext('2d');
-  const movement = kind === 'Movement';
-  const rune = kind === 'Rune';
-  const treasure = kind === 'Treasure';
-  const glow = movement ? '#e9a942' : rune ? '#8e65db' : '#e1a94e';
-  const glowLight = movement ? '#ffe3a0' : rune ? '#e5d5ff' : '#ffe2a1';
-  const metal = rune ? '#8c6cab' : '#9b7138';
-
-  // Flat, worn ruin stone matching the board. Energy belongs to the result,
-  // not to the body of a die that is still tumbling.
-  const base = context.createRadialGradient(172, 118, 18, 256, 256, 370);
-  base.addColorStop(0, rune ? '#21192b' : '#211b16');
-  base.addColorStop(.42, rune ? '#130f1c' : '#120f0c');
-  base.addColorStop(1, '#050505');
-  context.fillStyle = base; context.fillRect(0, 0, 512, 512);
-
-  // Fine stone grain and non-emissive fractures.
-  let seed = label.split('').reduce((sum, letter) => sum + letter.charCodeAt(0), movement ? 73 : 191);
-  const random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
-  for (let index = 0; index < 850; index++) {
-    const shade = 18 + Math.floor(random() * 28);
-    context.fillStyle = `rgba(${shade + (movement ? 8 : 5)},${shade},${shade + (movement ? 0 : 11)},${.05 + random() * .12})`;
-    context.fillRect(random() * 512, random() * 512, 1 + random() * 3, 1 + random() * 3);
-  }
-  context.save(); context.strokeStyle = 'rgba(7,6,8,.72)'; context.lineWidth = 3;
-  for (let crack = 0; crack < 8; crack++) {
-    let x = 95 + random() * 320, y = 85 + random() * 340; context.beginPath(); context.moveTo(x, y);
-    for (let step = 0; step < 4; step++) { x += (random() - .5) * 54; y += 16 + random() * 30; context.lineTo(x, y); }
-    context.stroke();
-  }
-  context.restore();
-
-  // Celestial face plate: clipped gold frame, inset medallion and precision marks.
-  context.lineJoin = 'round'; context.shadowBlur = 0;
-  const outerPlate = new Path2D('M86 28H426L484 86V426L426 484H86L28 426V86Z');
-  context.strokeStyle = metal; context.lineWidth = 15; context.stroke(outerPlate);
-  context.strokeStyle = 'rgba(224,176,92,.48)'; context.lineWidth = 3;
-  context.stroke(new Path2D('M92 49H420L463 92V420L420 463H92L49 420V92Z'));
-  context.strokeStyle = 'rgba(189,170,140,.4)'; context.lineWidth = 3;
-  [[72,72,1,1],[440,72,-1,1],[72,440,1,-1],[440,440,-1,-1]].forEach(([x,y,sx,sy]) => {
-    context.beginPath(); context.moveTo(x, y + sy * 54); context.quadraticCurveTo(x, y, x + sx * 54, y); context.stroke();
-    context.beginPath(); context.moveTo(x + sx * 17, y + sy * 17); context.lineTo(x + sx * 34, y + sy * 34); context.stroke();
-  });
-  context.beginPath(); context.arc(256,256,151,0,Math.PI*2); context.strokeStyle='rgba(159,113,51,.72)'; context.lineWidth=5; context.stroke();
-  context.beginPath(); context.arc(256,256,127,0,Math.PI*2); context.strokeStyle='rgba(218,166,77,.38)'; context.lineWidth=2; context.stroke();
-  for(let tick=0;tick<12;tick++){
-    const angle=tick*Math.PI/6,inner=tick%3===0?132:139,outer=147;
-    context.beginPath();context.moveTo(256+Math.cos(angle)*inner,256+Math.sin(angle)*inner);context.lineTo(256+Math.cos(angle)*outer,256+Math.sin(angle)*outer);context.strokeStyle='rgba(216,163,76,.7)';context.lineWidth=tick%3===0?4:2;context.stroke();
-  }
-  const diamond=(x,y,size=8)=>{context.beginPath();context.moveTo(x,y-size);context.lineTo(x+size,y);context.lineTo(x,y+size);context.lineTo(x-size,y);context.closePath();context.strokeStyle='rgba(218,166,77,.78)';context.lineWidth=3;context.stroke()};
-  [[256,70],[442,256],[256,442],[70,256]].forEach(([x,y])=>diamond(x,y,8));
-
-  const orb = (x, y, radius = 46) => {
-    context.save(); context.shadowBlur = 0;
-    context.fillStyle = '#171318'; context.beginPath(); context.arc(x, y, radius + 9, 0, Math.PI * 2); context.fill();
-    const core = context.createRadialGradient(x - radius * .24, y - radius * .3, 2, x, y, radius);
-    core.addColorStop(0, '#fffde4'); core.addColorStop(.25, glowLight); core.addColorStop(.62, glow); core.addColorStop(1, movement ? '#743100' : rune ? '#003c52' : '#35004f');
-    context.fillStyle = core; context.beginPath(); context.arc(x, y, radius, 0, Math.PI * 2); context.fill();
-    context.strokeStyle = metal; context.lineWidth = 10; context.stroke();
-    context.strokeStyle = 'rgba(255,255,255,.52)'; context.lineWidth = 3; context.beginPath(); context.arc(x, y, radius - 10, -.9, 1.45); context.stroke(); context.restore();
-  };
-
-  const drawMovement = value => {
-    context.save(); context.fillStyle=glowLight; context.shadowColor=glow; context.shadowBlur=10;
-    context.font='112px Georgia, "Times New Roman", serif';context.textAlign='center';context.textBaseline='middle';
-    context.fillText(String(value),256,264);context.restore();
-  };
-  const symbolStroke = () => { context.strokeStyle = glowLight; context.fillStyle=glowLight; context.lineWidth = 15; context.lineCap = 'round'; context.lineJoin = 'round'; context.shadowColor=glow; context.shadowBlur = 10; };
-  const arrowHead = (x, y, angle) => {
-    const length = 29, spread = .62; context.beginPath();
-    context.moveTo(x - Math.cos(angle - spread) * length, y - Math.sin(angle - spread) * length); context.lineTo(x, y);
-    context.lineTo(x - Math.cos(angle + spread) * length, y - Math.sin(angle + spread) * length); context.stroke();
-  };
-  const sparkle = (x,y,r=18) => {context.beginPath();context.moveTo(x,y-r);context.quadraticCurveTo(x+5,y-5,x+r,y);context.quadraticCurveTo(x+5,y+5,x,y+r);context.quadraticCurveTo(x-5,y+5,x-r,y);context.quadraticCurveTo(x-5,y-5,x,y-r);context.closePath();context.fill()};
-  const palm = (flip=false) => {context.save();if(flip){context.translate(512,0);context.scale(-1,1)}context.beginPath();context.moveTo(133,293);context.quadraticCurveTo(184,276,222,288);context.lineTo(276,309);context.quadraticCurveTo(299,318,318,302);context.lineTo(352,272);context.quadraticCurveTo(365,258,379,272);context.quadraticCurveTo(385,281,374,293);context.lineTo(326,348);context.quadraticCurveTo(301,374,261,365);context.lineTo(177,343);context.lineTo(133,343);context.stroke();context.restore()};
-  const treasureChest=()=>{context.save();context.lineWidth=13;context.strokeRect(190,207,132,92);context.beginPath();context.moveTo(190,242);context.lineTo(322,242);context.moveTo(256,242);context.lineTo(256,270);context.stroke();context.beginPath();context.arc(256,207,66,Math.PI,0);context.stroke();context.restore()};
-  const hood=()=>{context.save();context.beginPath();context.moveTo(256,144);context.quadraticCurveTo(174,159,171,260);context.quadraticCurveTo(180,348,256,370);context.quadraticCurveTo(332,348,341,260);context.quadraticCurveTo(338,159,256,144);context.closePath();context.stroke();context.beginPath();context.moveTo(208,262);context.quadraticCurveTo(229,244,248,266);context.moveTo(304,262);context.quadraticCurveTo(283,244,264,266);context.stroke();context.restore()};
-  const drawAction = action => {
-    context.save(); symbolStroke();
-    if (action === 'TAKE') {
-      if(faceIndex%2===0){palm();sparkle(266,197,27)}else{treasureChest();sparkle(348,169,14)}
-    } else if (action === 'GIVE') {
-      palm(faceIndex%2===0);context.beginPath();context.moveTo(256,181);context.lineTo(220,230);context.lineTo(292,230);context.closePath();context.fill();sparkle(faceIndex%2===0?350:162,185,12);
-    } else {
-      if(faceIndex%2===0){context.beginPath();context.arc(247,258,105,-.6,Math.PI*1.42);context.stroke();arrowHead(334,200,-.35);palm(true)}else{hood()}
-    }
-    context.restore();
-  };
-
-  const drawTreasure = treasureFace => {
-    if(treasureFace==='BLANK')return;
-    context.save();symbolStroke();context.translate(256,256);
-    if(treasureFace==='RELIC'){
-      context.beginPath();context.moveTo(0,-112);context.lineTo(62,-18);context.lineTo(24,96);context.lineTo(0,126);context.lineTo(-24,96);context.lineTo(-62,-18);context.closePath();context.stroke();
-      context.beginPath();context.moveTo(0,-82);context.lineTo(0,96);context.moveTo(-45,-12);context.lineTo(45,-12);context.stroke();
-    }else if(treasureFace==='ODDITY'){
-      context.beginPath();context.arc(0,0,100,.35,Math.PI*1.65);context.stroke();context.beginPath();context.arc(0,0,48,Math.PI*1.35,.65);context.stroke();context.beginPath();context.arc(0,0,22,0,Math.PI*2);context.fill();
-    }else{
-      context.strokeRect(-76,-79,152,158);context.beginPath();context.arc(0,0,43,0,Math.PI*2);context.stroke();sparkle(0,0,25);
-    }
-    context.restore();
-  };
-
-  const drawRune = power => {
-    context.save(); symbolStroke(); context.strokeStyle = glowLight; context.fillStyle = glowLight; context.translate(256,256);
-    const runeGem = (x,y,r=24) => {
-      context.save(); context.shadowBlur=0; context.fillStyle=glow;
-      context.beginPath(); context.arc(x,y,r,0,Math.PI*2); context.fill(); context.strokeStyle=metal; context.lineWidth=7; context.stroke(); context.restore();
-    };
-    if (power === '×2' || power === '×3') {
-      const count = power === '×2' ? 2 : 3;
-      for (let index = 0; index < count; index++) {
-        const x = (index - (count - 1) / 2) * 83;
-        context.beginPath(); context.moveTo(x - 23,-55); context.lineTo(x + 23,55); context.moveTo(x + 23,-55); context.lineTo(x - 23,55); context.stroke();
-      }
-    } else if (power === 'SWAP') {
-      context.beginPath(); context.arc(0,0,112,-2.65,-.18); context.stroke(); arrowHead(108,-20,.42);
-      context.beginPath(); context.arc(0,0,112,.5,2.95); context.stroke(); arrowHead(-108,20,Math.PI+.42);
-      runeGem(-58,0); runeGem(58,0);
-    } else if (power === 'PLUNDER') {
-      [[-105,-78],[105,-78],[0,118]].forEach(([x,y]) => {
-        runeGem(x,y,22); const tx=x*.28,ty=y*.28;
-        context.beginPath(); context.moveTo(x*.72,y*.72); context.lineTo(tx,ty); context.stroke(); arrowHead(tx,ty,Math.atan2(-y,-x));
-      });
-      runeGem(0,0,39);
-    } else if (power === 'RIFT') {
-      context.beginPath(); context.ellipse(0,0,68,132,0,0,Math.PI*2); context.stroke();
-      context.beginPath(); context.moveTo(-138,0); context.lineTo(-78,0); context.moveTo(78,0); context.lineTo(138,0); context.stroke();
-      context.beginPath(); context.moveTo(0,-104); context.lineTo(-28,-42); context.lineTo(19,-5); context.lineTo(-23,45); context.lineTo(0,105); context.stroke();
-    } else {
-      context.beginPath(); context.moveTo(-34,-134); context.lineTo(40,-48); context.lineTo(2,-22); context.lineTo(58,20); context.lineTo(-28,134); context.lineTo(-4,42); context.lineTo(-62,4); context.closePath(); context.fill();
-      context.strokeStyle=metal; context.lineWidth=5; context.beginPath(); context.arc(0,0,158,0,Math.PI*2); context.stroke();
-    }
-    context.restore();
-  };
-
-  if (movement) drawMovement(Number(label)); else if (rune) drawRune(label); else if(treasure)drawTreasure(label);else drawAction(label);
-  const mobileUpload=matchMedia('(max-width:900px), (pointer:coarse)').matches;
-  const uploadCanvas=source=>{if(!mobileUpload)return source;const scaled=document.createElement('canvas');scaled.width=scaled.height=256;scaled.getContext('2d').drawImage(source,0,0,256,256);return scaled};
-  const texture = new THREE.CanvasTexture(uploadCanvas(canvas)); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8;
-  const glowCanvas=document.createElement('canvas');glowCanvas.width=glowCanvas.height=512;const glowContext=glowCanvas.getContext('2d'),source=context.getImageData(0,0,512,512),mask=glowContext.createImageData(512,512);
-  for(let y=78;y<434;y++)for(let x=78;x<434;x++){const i=(y*512+x)*4,luma=source.data[i]*.2126+source.data[i+1]*.7152+source.data[i+2]*.0722;if(luma>145){const value=Math.min(255,Math.max(0,(luma-145)*2.35));mask.data[i]=mask.data[i+1]=mask.data[i+2]=value;mask.data[i+3]=255}}
-  glowContext.putImageData(mask,0,0);const emissiveMap=new THREE.CanvasTexture(uploadCanvas(glowCanvas));emissiveMap.colorSpace=THREE.SRGBColorSpace;emissiveMap.anisotropy=8;
-  return {texture,emissiveMap};
-}
 
 function resultFaceIndex(labels, result) {
   const wanted = String(result).toUpperCase();
@@ -193,8 +36,8 @@ export class TabokDice3D {
     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.scene.add(new THREE.HemisphereLight(0xbda8ff, 0x1a0c05, 2.1));
     this.key = new THREE.SpotLight(0xffd895, 58, 25, Math.PI / 4, .48, 1.4); this.key.position.set(-3, 7, 5); this.key.castShadow = true; this.scene.add(this.key);
-    const violet = new THREE.PointLight(0xa249ff, 28, 12, 2); violet.position.set(4, 2, 2); this.scene.add(violet);
-    this.dieGeometry = new RoundedBoxGeometry(2.05, 2.05, 2.05, 5, .24);
+    const violet = new THREE.PointLight(0xa249ff, 28, 12, 2); violet.position.set(4, 2, 2); this.scene.add(violet);this.rim=violet;
+    this.dieGeometry = new RoundedBoxGeometry(2.05, 2.05, 2.05, 4, .115);
     this.dieResources = new Map();
     this.preparedSignature = '';
     this.makeTray(); this.dice = [];
@@ -226,10 +69,10 @@ export class TabokDice3D {
   }
 
   supports(specs) {
-    const runeOnly=specs?.length===1&&specs[0].label==='Rune';
+    const singleDie=specs?.length===1&&Object.hasOwn(FACE_SETS,specs[0].label);
     const offerOnly=specs?.length===1&&specs[0].label==='Offer';
     const turnCast=(specs?.length===2||specs?.length===3)&&specs[0].label==='Movement'&&['Treasure','Rune'].includes(specs[1].label)&&(specs.length===2||specs[2].label==='Offer');
-    return (runeOnly||offerOnly||turnCast)&&specs.every(spec=>spec.rolling!==false);
+    return (singleDie||offerOnly||turnCast)&&specs.every(spec=>spec.rolling!==false);
   }
 
   clearDice() {
@@ -247,34 +90,54 @@ export class TabokDice3D {
       const {texture,emissiveMap} = faceTexture(label, kind, faceIndex);
       return new THREE.MeshStandardMaterial({
         map: texture, emissiveMap, emissive:0x000000, emissiveIntensity:0, bumpMap: texture, bumpScale: .026,
-        color: 0xffffff, roughness: .62, metalness: .22
+        color: 0xffffff, roughness: .52, metalness: .38
       });
     });
-    const resource = {labels,materials};this.dieResources.set(key,resource);return resource;
+    // Physical metal seams catch light independently from the etched face maps.
+    const frame=new THREE.Group(),edgeMaterial=new THREE.MeshStandardMaterial({color:DICE_PALETTES[kind]?.metal||'#9876ad',roughness:.34,metalness:.78});
+    const edgeGeometry=new THREE.CylinderGeometry(.016,.016,1.78,6);
+    for(let axis=0;axis<3;axis++)for(const a of [-1,1])for(const b of [-1,1]){
+      const edge=new THREE.Mesh(edgeGeometry,edgeMaterial),pos=[0,0,0];pos[(axis+1)%3]=a*.981;pos[(axis+2)%3]=b*.981;edge.position.set(...pos);
+      if(axis===0)edge.rotation.z=Math.PI/2;else if(axis===2)edge.rotation.x=Math.PI/2;frame.add(edge);
+    }
+    const resource = {labels,materials,frame};this.dieResources.set(key,resource);return resource;
   }
 
   buildDice(kind, x, faceLabels=null) {
     if(kind==='Offer')return this.buildOfferDie(x,faceLabels);
-    const {labels,materials} = this.dieResource(kind,faceLabels);
+    const {labels,materials,frame} = this.dieResource(kind,faceLabels);
     materials.forEach(material=>{material.emissive.set(0x000000);material.emissiveIntensity=0});
-    const die = new THREE.Mesh(this.dieGeometry, materials);
+    const die = new THREE.Mesh(this.dieGeometry, materials);die.add(frame.clone(true));
     die.position.set(x, 1.05, 0); die.scale.setScalar(1);die.rotation.set(0,0,0);die.castShadow = true; die.receiveShadow = true; die.userData = { kind, labels };
     this.scene.add(die); this.dice.push(die); return die;
   }
 
   buildOfferDie(x, faceLabels=null) {
-    const labels=(faceLabels?.length===20?faceLabels:FACE_SETS.Offer).map(String);
-    const geometry=new THREE.IcosahedronGeometry(1.46,0),body=new THREE.MeshStandardMaterial({color:0x17110d,roughness:.64,metalness:.28});
-    const die=new THREE.Group(),stone=new THREE.Mesh(geometry,body);stone.castShadow=true;stone.receiveShadow=true;die.add(stone);
-    die.add(new THREE.LineSegments(new THREE.EdgesGeometry(geometry,16),new THREE.LineBasicMaterial({color:0xb48342,transparent:true,opacity:.9})));
-    const source=geometry.index?geometry.toNonIndexed():geometry,positions=source.attributes.position,faceNormals=[],resultMaterials=[];
-    for(let face=0;face<20;face++){
-      const a=new THREE.Vector3().fromBufferAttribute(positions,face*3),b=new THREE.Vector3().fromBufferAttribute(positions,face*3+1),c=new THREE.Vector3().fromBufferAttribute(positions,face*3+2),center=a.clone().add(b).add(c).multiplyScalar(1/3),normal=new THREE.Vector3().crossVectors(b.clone().sub(a),c.clone().sub(a)).normalize();
-      if(normal.dot(center)<0)normal.negate();faceNormals.push(normal.clone());
-      const texture=offerFaceTexture(labels[face]),material=new THREE.MeshStandardMaterial({map:texture,emissiveMap:texture,emissive:0x000000,emissiveIntensity:0,transparent:true,depthWrite:false,roughness:.48,metalness:.18,side:THREE.DoubleSide});
-      const decal=new THREE.Mesh(new THREE.PlaneGeometry(.78,.78),material);decal.position.copy(center.clone().add(normal.clone().multiplyScalar(.018)));decal.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),normal);die.add(decal);resultMaterials.push(material);
+    const labels=(faceLabels?.length===20?faceLabels:FACE_SETS.Offer).map(String),key='Offer|'+labels.join(',');
+    let resource=this.dieResources.get(key);
+    if(!resource){
+      const geometry=new THREE.IcosahedronGeometry(1.46,0),body=new THREE.MeshStandardMaterial({color:0x24132e,roughness:.54,metalness:.32});
+      const template=new THREE.Group(),stone=new THREE.Mesh(geometry,body);stone.castShadow=true;stone.receiveShadow=true;template.add(stone);
+      template.add(new THREE.LineSegments(new THREE.EdgesGeometry(geometry,16),new THREE.LineBasicMaterial({color:0xc096a8,transparent:true,opacity:.95})));
+      const positions=geometry.attributes.position,faceNormals=[],resultMaterials=[];
+      for(let face=0;face<20;face++){
+        const vertices=[0,1,2].map(i=>new THREE.Vector3().fromBufferAttribute(positions,face*3+i));
+        const [a,b,c]=vertices,center=a.clone().add(b).add(c).multiplyScalar(1/3),normal=new THREE.Vector3().crossVectors(b.clone().sub(a),c.clone().sub(a)).normalize();
+        if(normal.dot(center)<0)normal.negate();faceNormals.push(normal.clone());
+        const {texture,emissiveMap}=offerFaceTexture(labels[face]);
+        const material=new THREE.MeshStandardMaterial({map:texture,emissiveMap,bumpMap:texture,bumpScale:.009,emissive:0x000000,emissiveIntensity:0,roughness:.48,metalness:.38});
+        // Full triangular surfaces share the die's actual vertices. There are
+        // no small square decals, transparent corners, or rotated face labels.
+        const faceGeometry=new THREE.BufferGeometry();
+        faceGeometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices.flatMap(v=>v.clone().sub(center).multiplyScalar(.991).add(center).addScaledVector(normal,.006).toArray()),3));
+        faceGeometry.setAttribute('uv',new THREE.Float32BufferAttribute([.5,1-20/512,20/512,1-461/512,492/512,1-461/512],2));
+        faceGeometry.computeVertexNormals();
+        const panel=new THREE.Mesh(faceGeometry,material);panel.name='D20 face '+labels[face];template.add(panel);resultMaterials.push(material);
+      }
+      resource={template,faceNormals,resultMaterials,restHeight:1.46*Math.sqrt((5+2*Math.sqrt(5))/15)+.006};this.dieResources.set(key,resource);
     }
-    die.position.set(x,1.35,0);die.userData={kind:'Offer',labels,faceNormals,resultMaterials};this.scene.add(die);this.dice.push(die);return die;
+    const {faceNormals,resultMaterials}=resource,die=resource.template.clone(true);
+    die.position.set(x,1.35,0);die.userData={kind:'Offer',labels,faceNormals,resultMaterials,restHeight:resource.restHeight};this.resetDieGlow(die);this.scene.add(die);this.dice.push(die);return die;
   }
 
   resetDieGlow(die) {
@@ -287,9 +150,9 @@ export class TabokDice3D {
     const signature=specs.map(spec=>spec.label+':'+(spec.faces||[]).join(',')).join('|');
     if(signature===this.preparedSignature&&this.dice.length===specs.length){
       this.dice.forEach(die=>this.resetDieGlow(die));
-      this.key.color.set(color);this.canvas.dataset.diceCount=String(specs.length);this.canvas.classList.add('active');this.resize();return true;
+      this.key.color.set(0xffeedb);this.rim.color.set(specs[0].label==='Action'?0x53cbb7:specs[0].label==='Treasure'?0xe6af62:0xa879e0);this.rim.intensity=14;this.canvas.dataset.diceCount=String(specs.length);this.canvas.classList.add('active');this.resize();return true;
     }
-    this.clearDice(); this.key.color.set(color);
+    this.clearDice(); this.key.color.set(0xffeedb);this.rim.color.set(specs[0].label==='Action'?0x53cbb7:specs[0].label==='Treasure'?0xe6af62:0xa879e0);this.rim.intensity=14;
     const positions = specs.length === 3 ? [-2.45,0,2.45] : specs.length === 2 ? [-1.45,1.45] : [0];
     specs.forEach((spec,index) => this.buildDice(spec.label,positions[index],spec.faces));
     this.preparedSignature=signature;
@@ -328,16 +191,16 @@ export class TabokDice3D {
           const landingX = landings[index];
           die.position.x = THREE.MathUtils.lerp(launches[index],landingX,Math.min(1,t*1.28));
           die.position.z = THREE.MathUtils.lerp(-1.5 + index * .35, 0, Math.min(1, t * 1.35));
-          die.position.y = 1.05 + Math.abs(Math.sin(t * Math.PI * 4.4 + index * .42)) * 2.65 * Math.pow(1 - t, 1.35);
+          die.position.y = (die.userData.restHeight||1.05) + Math.abs(Math.sin(t * Math.PI * 4.4 + index * .42)) * 2.65 * Math.pow(1 - t, 1.35);
           if (brake > 0) die.quaternion.slerp(starts[index].target, .045 + brake * .16);
         });
         if (t >= .62 && !brakingStarted) { brakingStarted = true; starts.forEach((start, index) => { start.quaternion.copy(this.dice[index].quaternion); }); }
         this.render();
         if (t < 1) requestAnimationFrame(frame); else {
           this.dice.forEach((die, index) => {
-            die.position.set(landings[index],1.05,0); die.quaternion.copy(starts[index].target);
+            die.position.set(landings[index],die.userData.restHeight||1.05,0); die.quaternion.copy(starts[index].target);
             const material = die.userData.resultMaterials?.[die.userData.resultFace]||die.material?.[die.userData.resultFace];
-            material?.emissive?.set(die.userData.kind === 'Movement' ? 0xffaa38 : die.userData.kind === 'Rune' ? 0x50e8ff : die.userData.kind==='Offer'?0xf0a84a:0xd45aff); if(material)material.emissiveIntensity = die.userData.kind==='Offer'?2.1:1.45;
+            material?.emissive?.set(DICE_PALETTES[die.userData.kind]?.glow || 0xb783ff); if(material)material.emissiveIntensity = .72;
           });
           this.canvas.classList.remove('casting'); this.canvas.classList.add('revealed'); this.render(); resolve(true);
         }

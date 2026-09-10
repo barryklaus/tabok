@@ -212,7 +212,7 @@ test('Render Discipline reuses dice resources and removes invisible competing GP
  const bust=fs.readFileSync(path.join(root,'character-bust-preview.js'),'utf8');
  assert.match(dice,/this\.dieResources = new Map\(\)/);
  assert.match(dice,/signature===this\.preparedSignature&&this\.dice\.length===specs\.length/);
- assert.match(dice,/scaled\.width=scaled\.height=256/);
+ assert.match(fs.readFileSync(path.join(root,'dice-reference-art.js'),'utf8'),/scaled\.width=scaled\.height=256/);
  assert.doesNotMatch(dice,/die\.geometry\.dispose\(\); die\.material\.forEach/);
  assert.match(board,/this\.renderer\.shadowMap\.autoUpdate = false/);
  assert.match(board,/setPresentationPaused\(paused\)/);
@@ -231,13 +231,14 @@ test('Gilded Fate uses reference-matched treasure art and engraved symbol dice',
   assert.match(html,new RegExp(asset.replaceAll('.','\\.')));
   assert.ok(fs.existsSync(path.join(root,asset)),`${name} production icon must exist`);
  }
- assert.match(html,/true3d-dice\.js\?v=20260910D1/);
- assert.match(dice,/Celestial face plate/);
- assert.match(dice,/new Path2D\('M86 28H426/);
- assert.match(dice,/context\.fillText\(String\(value\),256,264\)/);
- assert.match(dice,/const treasureChest=/);
- assert.match(dice,/const hood=/);
+ assert.match(html,/true3d-dice\.js\?v=20260910G2/);
+ const art=fs.readFileSync(path.join(root,'dice-reference-art.js'),'utf8');
+ for(const name of ['relic','oddity','keepsake'])assert.ok(art.includes(`assets/treasure-${name}-gilded-v1.png`));
+ assert.match(art,/ctx\.drawImage\(img,/);
+ assert.match(dice,/await preloadTreasureIcons\(\)/);
  assert.match(dice,/faceTexture\(label, kind, faceIndex\)/);
+ assert.match(art,/Movement:.*glow:0xc47aff/);
+ assert.match(art,/Action:.*glow:0x71ded0/);
 });
 
 test('Awakened Judges removes equipment and uses one private turn ritual',()=>{

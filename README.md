@@ -1,6 +1,14 @@
 # TABOK — The Crossing
 
-Version: **v1.3.1 — The Six Guardians · 2026.09.10.G1**
+Version: **v1.3.2 — Guardians & Gilded Dice · 2026.09.10.G2**
+
+## v1.3.2 — Guardians & Gilded Dice
+
+- Rebuilds guardian arms around longer upper arms and forearms, lower elbows, narrower folded sleeves, and larger sculpted hands. Open bell sleeves hang below the forearms; all six relics remain supported in the same ceremonial pose.
+- Replaces the dice artwork with fractured dark stone, fine celestial borders, physical metal seams, purple serif movement numbers, and teal hand/skull action symbols.
+- Treasure faces reuse the exact existing inventory PNG artwork for Relic, Oddity, and Keepsake. Current outcome counts and odds—including blank treasure faces—are preserved.
+- The D20 has full triangular decorated faces and larger gold numbers. Every numbered result rests face-up without intersecting the tray, and its resources are cached across repeated casts.
+- [Inspect and roll the new dice](https://barryklaus.github.io/tabok/dice-gallery.html). All 36 automated tests pass; arm proportions, original treasure artwork, teal symbols, and D20 rolls are visually checked.
 
 ## v1.3.1 — The Six Guardians
 

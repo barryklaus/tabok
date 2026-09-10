@@ -7,7 +7,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createGuardianStatue, GUARDIANS } from './guardian-statues.js?v=20260910G1';
+import { createGuardianStatue, GUARDIANS } from './guardian-statues.js?v=20260910G2';
 window.addEventListener('error',e=>document.querySelector('#error').textContent=e.message);
 window.addEventListener('unhandledrejection',e=>document.querySelector('#error').textContent=String(e.reason));
 const renderer=new THREE.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true,alpha:false});
