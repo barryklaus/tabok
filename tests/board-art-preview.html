@@ -4,7 +4,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#050305;color:#decda9;font:14px system-ui}header{height:62px;display:flex;align-items:center;gap:16px;padding:12px 20px;background:#15120f}button,select{background:#28221b;border:1px solid #74613c;color:#ebd5a8;padding:8px;border-radius:4px}#stage{height:calc(100dvh - 62px);position:relative}canvas{display:block;width:100%;height:100%}output{font-size:12px;margin-left:auto}#actorTooltip{display:none}#error{position:absolute;top:80px;left:20px;color:#ff9797}@media(max-width:650px){header{height:108px;flex-wrap:wrap;gap:8px}#stage{height:calc(100dvh - 108px)}output{margin:0;width:100%}}
 </style><script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script></head>
-<body><header><strong>Fractured Sanctuary · Art check</strong><select id="quality" aria-label="Quality"><option value="full">High Fidelity 60</option><option value="auto">Cinematic maximum</option><option value="ultra">Performance</option><option value="lite">Battery saver</option></select><button id="orbit">Orbit view</button><button id="reset">Reset view</button><button id="major">Major escalation</button><output id="stats">Preparing board…</output></header><div id="stage"><canvas id="board" aria-label="Board art preview"></canvas></div><div id="actorTooltip"></div><p id="error" role="alert"></p>
+<body><header><strong>Fractured Sanctuary · Art check</strong><select id="quality" aria-label="Quality"><option value="full">High Fidelity 60</option><option value="auto">Cinematic maximum</option><option value="ultra">Performance</option><option value="lite">Battery saver</option></select><button id="orbit">Orbit view</button><button id="reset">Reset view</button><button id="major">Major escalation</button><button id="awaken">Awaken next guardian</button><button id="walk">Move guardian</button><output id="stats">Preparing board…</output></header><div id="stage"><canvas id="board" aria-label="Board art preview"></canvas></div><div id="actorTooltip"></div><p id="error" role="alert"></p>
 <script type="module">
 import { TabokTrue3DBoard } from './true3d-board.js?v=20260907R4';
 const error = document.getElementById('error');
@@ -23,7 +23,7 @@ try {
     { id:'P4',charId:'justin',pos:'-7,18',color:'#dfb343' },
     { id:'P5',charId:'sue',pos:'7,11',color:'#f174b9' },
     { id:'P6',charId:'wanday',pos:'-7,11',color:'#b086eb' }
-  ], monsters:[{id:'M1',pos:'-2,11'}], equipment:[['-3,8',['S']],['6,8',['S']],['-3,17',['S']],['3,5',['A']],['-6,14',['A']],['3,14',['A']]],runes:[],legal:[],portalLegal:false,turnColor:'#ead7a1'};
+  ], monsters:[], dormantJudges:6, equipment:[['-3,8',['S']],['6,8',['S']],['-3,17',['S']],['3,5',['A']],['-6,14',['A']],['3,14',['A']]],runes:[],legal:[],portalLegal:false,turnColor:'#ead7a1'};
   // Explicit positions for the six preview Rune Dice, in the actual board coordinate system.
   state.runes = [['-5,8',1],['5,3',1],['9,8',1],['5,17',1],['-5,19',1],['-9,14',1]];
   board.syncState(state);
@@ -31,8 +31,20 @@ try {
   document.getElementById('orbit').onclick = () => board.orbitCamera(1);
   document.getElementById('reset').onclick = () => board.resetCamera();
   document.getElementById('major').onclick = () => {
-    if (state.monsters.length > 1) state.monsters.pop(); else state.monsters.push({id:'MAJOR',major:true,pos:'3,11'});
+    if (state.monsters.some(m=>m.major)) state.monsters=state.monsters.filter(m=>!m.major); else state.monsters.push({id:'MAJOR',major:true,pos:'3,11'});
     board.syncState(state);
+  };
+  const stations=['-3,17','3,14','6,8','3,5','-3,8','-6,14'];
+  document.getElementById('awaken').onclick = () => {
+    if(!state.dormantJudges) { state.dormantJudges=6;state.monsters=[];board.syncState(state);return; }
+    const index=6-state.dormantJudges;state.dormantJudges--;
+    state.monsters.push({id:'M'+(index+1),statue:index+1,pos:stations[index]});
+    board.syncState(state);board.activateJudge('M'+(index+1));
+  };
+  document.getElementById('walk').onclick = async () => {
+    const actor=state.monsters.find(m=>!m.major);if(!actor)return;
+    const from=actor.pos,to=from==='-2,11'?stations[actor.statue-1]:'-2,11';
+    await board.animateActor(actor.id,from,to,1500);actor.pos=to;board.syncState(state);
   };
   let frames = [], previous = performance.now(), lastReport = previous;
   const measure = now => {
@@ -41,7 +53,7 @@ try {
       const sorted = frames.filter(n => n < 500).sort((a,b)=>a-b);
       const average = sorted.reduce((a,b)=>a+b,0)/sorted.length;
       const info = board.renderer.info;
-      document.getElementById('stats').textContent = `${Math.round(1000/average)} FPS · p95 ${sorted[Math.floor(sorted.length*.95)]?.toFixed(1)}ms · ${info.render.calls} draws · ${info.render.triangles.toLocaleString()} triangles · ${info.memory.textures} textures · scale ${board.renderRatio.toFixed(2)}`;
+      document.getElementById('stats').textContent = `${state.dormantJudges} dormant / ${state.monsters.filter(m=>!m.major).length} awake · ${Math.round(1000/average)} FPS · p95 ${sorted[Math.floor(sorted.length*.95)]?.toFixed(1)}ms · ${info.render.calls} draws · ${info.render.triangles.toLocaleString()} triangles · ${info.memory.textures} textures · scale ${board.renderRatio.toFixed(2)}`;
       frames=[];lastReport=now;
     }
     requestAnimationFrame(measure);

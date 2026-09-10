@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createGuardianStatue } from './guardian-statues.js?v=20260910G1';
 import { createCosmicSanctuary } from './cosmic-sanctuary.js?v=20260909H1';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createTravelerPilot } from './character-3d-travelers.js?v=20260907G4';
@@ -572,18 +573,7 @@ export class TabokTrue3DBoard {
   }
 
   makeJudgeModel(index = 0, active = false) {
-    const judge=new THREE.Group();judge.name=(active?'Awakened':'Dormant')+' Judge '+(index+1);
-    const stone=new THREE.MeshStandardMaterial({color:active?0x393040:0x302936,roughness:.94,metalness:.04,emissive:active?0x35104d:0x16091f,emissiveIntensity:active?.34:.16});
-    const crown=new THREE.MeshBasicMaterial({color:active?0xc56aff:0x7d3b9b,transparent:true,opacity:active?.72:.28,depthWrite:false});
-    const body=new THREE.Mesh(index%2?new THREE.CylinderGeometry(.32+.04*(index%3),.56,1.62,5+index%3):new THREE.ConeGeometry(.62,1.75,5+index%2),stone);
-    body.position.y=1.05;body.rotation.y=index*.71;judge.add(body);
-    const headGeometry=index===0?new THREE.ConeGeometry(.34,.72,4):index===1?new THREE.SphereGeometry(.34,7,5):index===2?new THREE.BoxGeometry(.5,.62,.4):index===3?new THREE.CylinderGeometry(.24,.39,.68,6):index===4?new THREE.TetrahedronGeometry(.43):new THREE.OctahedronGeometry(.39);
-    const head=new THREE.Mesh(headGeometry,stone);head.position.y=2.12;head.rotation.set(index*.08,index*.43,index===4?.22:0);judge.add(head);
-    const limbGeometry=new THREE.CylinderGeometry(.09,.13,1.38,5);for(let side=-1;side<=1;side+=2){const limb=new THREE.Mesh(limbGeometry,stone);limb.position.set(side*(.48+index*.025),1.05+(index%2)*.18,0);limb.rotation.z=side*(.22+index*.055);judge.add(limb)}
-    const halo=new THREE.Mesh(new THREE.TorusGeometry(.5+index*.035,.025,5,24),crown);halo.position.y=2.2;halo.rotation.x=Math.PI/2+(index%2)*.35;halo.userData.judgeCrown=true;judge.add(halo);
-    judge.traverse(node=>{if(node.isMesh){node.castShadow=false;node.receiveShadow=false;node.userData.preserveMaterial=true;node.userData.actorModelMesh=true}});
-    if(active){judge.userData.update=time=>{halo.rotation.z=time*1.45+index*.83;const awakening=(judge.userData.activationUntil||0)>performance.now()?1:0,flare=Math.max(awakening,Math.pow(Math.max(0,Math.sin(time*.92+index*1.37)),12));crown.opacity=.58+flare*.42;stone.emissiveIntensity=.28+flare*.9};judge.userData.setMode=()=>{}}
-    return judge;
+    return createGuardianStatue(index, active);
   }
 
   makeDormantJudges() {
@@ -1053,6 +1043,10 @@ export class TabokTrue3DBoard {
       // Keep silhouettes readable without letting them spill beyond their board hex.
       const scale = actor.kind === 'player' ? (actor.charId === 'justin' ? .33 : .36) : major ? .36 : .86;
       visual.scale.setScalar(scale);
+      if (awakenedJudge) {
+        const station = worldFor(JUDGE_SITES[Math.max(0, Math.min(5, (Number(actor.statue) || 1) - 1))]);
+        visual.rotation.y = Math.atan2(-station.x, -station.z);
+      }
       visual.position.y = 0;
       visual.traverse(node => {
         if (node.userData.galleryPlatform) node.visible = false;
@@ -1613,6 +1607,7 @@ export class TabokTrue3DBoard {
     });
     const actorInterval = this.quality === 'lite' ? 66 : 33;
     if (now - this.lastActorModelUpdateAt >= actorInterval) {
+      this.dormantJudges?.forEach(judge => { if (judge.visible) judge.userData.update?.(time); });
       this.actorRoot.children.forEach(actor => {
         const visual = actor.userData.visual3D;
         if (!visual?.userData.update || visual.userData.cinematicFrozen) return;

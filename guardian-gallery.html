@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TABOK · The Six Guardians</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#08070d;color:#c4b6a7;font-family:Georgia,serif}canvas{display:block;width:100%;height:100%}#stage{height:calc(100dvh - 148px);min-height:340px}header{height:85px;padding:22px 4vw;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #40323c}h1{font-size:20px;letter-spacing:.22em;font-weight:400;margin:0}small{font:10px system-ui;letter-spacing:.19em;color:#857b8e}nav{display:flex;gap:8px}button,a{border:1px solid #594535;background:#17121b;color:#d4b993;padding:9px 14px;font:11px system-ui;letter-spacing:.07em;text-decoration:none;cursor:pointer}button[aria-pressed=true]{border-color:#a68355;background:#322437}footer{text-align:center;height:63px;padding:10px}#caption{font-size:17px;letter-spacing:.2em;margin-bottom:8px}#error{color:#ffa5a5;position:absolute;top:90px}#stats{position:absolute;bottom:80px;left:20px;color:#6b6275;font:11px system-ui}@media(max-width:650px){header{padding:14px;height:125px;display:block}h1{font-size:15px;margin-bottom:14px}#stage{height:calc(100dvh - 188px)}nav{gap:5px}button,a{padding:8px;font-size:10px}}
+</style><script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script></head><body>
+<header><div><h1>THE SIX GUARDIANS</h1><small>TABOK · SCULPTED IN STONE</small></div><nav><button id="previous" aria-label="Previous guardian">←</button><button id="next" aria-label="Next guardian">→</button><button id="lineup">All six</button><button id="awaken" aria-pressed="false">Awaken</button><a href="./">Enter game</a></nav></header>
+<div id="stage"><canvas aria-label="Interactive 3D guardian models; drag to rotate and scroll to zoom"></canvas></div><footer><div id="caption">THE ORACLE · SIGHT</div><small>DRAG TO ROTATE · SCROLL TO ZOOM</small></footer><output id="stats"></output><div id="error" role="alert"></div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { createGuardianStatue, GUARDIANS } from './guardian-statues.js?v=20260910G1';
+window.addEventListener('error',e=>document.querySelector('#error').textContent=e.message);
+window.addEventListener('unhandledrejection',e=>document.querySelector('#error').textContent=String(e.reason));
+const renderer=new THREE.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x08070d);scene.fog=new THREE.Fog(0x08070d,15,40);
+const camera=new THREE.PerspectiveCamera(34,1,.05,70),controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,1.6,0);controls.minDistance=2;controls.maxDistance=23;controls.maxPolarAngle=Math.PI*.53;
+scene.add(new THREE.HemisphereLight(0xd7c4e5,0x241b19,1.1));
+for(const [color,power,pos] of [[0xffddbd,3.8,[3,6,5]],[0x8968cb,2.5,[-4,4,-3]],[0xb0bdde,1.1,[-4,3,4]]]) {const l=new THREE.DirectionalLight(color,power);l.position.set(...pos);scene.add(l);}
+const candle=new THREE.PointLight(0xff953f,3,6,2);candle.position.set(0,.55,1);scene.add(candle);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(24,96),new THREE.MeshStandardMaterial({color:0x151019,roughness:.88,metalness:.15}));floor.rotation.x=-Math.PI/2;floor.position.y=-.005;scene.add(floor);
+let current=0,all=false,active=false,models=[];
+function rebuild(){
+  for(const m of models){scene.remove(m);const mats=new Set();m.traverse(n=>{n.geometry?.dispose();if(n.material)mats.add(n.material);});for(const mat of mats)mat.dispose();}models=[];
+  const ids=all?[0,1,2,3,4,5]:[current];for(const i of ids){const m=createGuardianStatue(i,active);m.position.x=all?(i-2.5)*1.55:0;scene.add(m);models.push(m);}
+  camera.position.set(all?0:.35,all?4.1:2.75,all?15.5:6.1);controls.target.set(0,1.58,0);controls.update();
+  document.querySelector('#caption').textContent=all?'SIGHT · JUDGMENT · MEMORY · ABSENCE · TIME · DEATH':`${GUARDIANS[current].name} · ${GUARDIANS[current].aspect}`.toUpperCase();
+  document.querySelector('#awaken').setAttribute('aria-pressed',String(active));
+  const triangles=models.reduce((s,m)=>s+m.userData.design.triangles,0);document.querySelector('#stats').textContent=`${models.length} solid 3D sculpture${models.length>1?'s':''} · ${triangles.toLocaleString()} triangles`;
+}
+document.querySelector('#previous').onclick=()=>{current=(current+5)%6;all=false;rebuild();};document.querySelector('#next').onclick=()=>{current=(current+1)%6;all=false;rebuild();};document.querySelector('#lineup').onclick=()=>{all=!all;rebuild();};document.querySelector('#awaken').onclick=()=>{active=!active;rebuild();};
+new ResizeObserver(()=>{const rect=document.querySelector('#stage').getBoundingClientRect();renderer.setSize(rect.width,rect.height,false);camera.aspect=rect.width/rect.height;camera.updateProjectionMatrix();}).observe(document.querySelector('#stage'));
+rebuild();renderer.setAnimationLoop(t=>{models.forEach(m=>m.userData.update(t/1000));controls.update();renderer.render(scene,camera);});
+</script></body></html>

@@ -1,6 +1,22 @@
 # TABOK — The Crossing
 
-Version: **v1.3.0 — Six Directions · 2026.09.10.D1**
+Version: **v1.3.1 — The Six Guardians · 2026.09.10.G1**
+
+## v1.3.1 — The Six Guardians
+
+- Replaces the six geometric Judge placeholders with fully modeled hooded stone guardians inspired by the supplied statue reference: Oracle (orb), Warden (sword), Chronicler (book), Hollow (eclipse), Keeper (hourglass), and Mourner (skull).
+- All six share the same scale, layered robes, recessed faceless hoods, antique bronze halos, carved octagonal bases, and candles. Models face local +Z and the dormant board instances face the Portal.
+- Awakening retains the same sculpture, scale, and starting orientation. Its halo and relic activate before the existing continuous movement takes over. Rules, station coordinates, and multiplayer state remain compatible.
+- Static details are batched by material; candle warmth uses emissive materials without additional point lights or shadow passes. Each sculpture is approximately 45,000 triangles.
+- Open [the interactive sculpture gallery](https://barryklaus.github.io/tabok/guardian-gallery.html) to inspect each guardian from any angle, compare all six, and toggle awakening.
+
+### Fast publishing
+
+Double-click `PUBLISH-TABOK.command` in the repository, or run `./PUBLISH-TABOK.command "Describe this update"`. It runs the tests, checks that GitHub has no newer commits, commits tracked changes, and pushes to the existing main branch. GitHub Pages then deploys automatically. New files must be staged first; the shortcut never force-pushes. Requires an existing GitHub sign-in plus Git and Node.js (the installed Codex runtime is also supported).
+
+### Guardian verification
+
+Run `node --test tests/*.test.cjs`. Open `tests/board-art-preview.html` through a local web server for the board, all-six awakening sequence, movement, camera orbit, and quality controls. Open `guardian-gallery.html` for close-up visual inspection. Geometry checks cover all relics, finite vertices/normals, grounded bases, hex footprint, rendering budget, and identical dormant/awakened geometry.
 
 ## v1.3.0 — Six Directions
 

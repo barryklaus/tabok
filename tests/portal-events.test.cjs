@@ -257,7 +257,7 @@ test('Awakened Judges removes equipment and uses one private turn ritual',()=>{
  assert.match(board,/major \? \.36 : \.86/);
  assert.match(board,/actor\.statue \|\| 0/);
  assert.match(board,/continuousJudge \? t/);
- assert.match(board,/node\.castShadow=false;node\.receiveShadow=false/);
+ assert.match(fs.readFileSync(path.join(root,'guardian-statues.js'),'utf8'),/node\.castShadow=false;node\.receiveShadow=false/);
  assert.doesNotMatch(board,/createMonsterPilot\(major \? 'major' : 'minor'\)/);
 });
 
