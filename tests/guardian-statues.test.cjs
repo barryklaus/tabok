@@ -52,3 +52,33 @@ test('awakening preserves each guardian geometry and updates glow without moving
   assert.equal(awake.userData.guardian.index,i);
  }
 });
+
+test('candles stay dark until awakening, then cast local light that follows the statue',async()=>{
+ const [{createGuardianStatue},THREE]=await ready;
+ for(let i=0;i<6;i++)for(const active of [false,true]){
+  const statue=createGuardianStatue(i,active);
+  const flames=statue.getObjectByName('Candle flames');
+  const lights=flames.children.filter(node=>node.isPointLight);
+  assert.equal(flames.visible,active,'dormant candles have no visible flame');
+  assert.equal(lights.length,2,'one light per cluster keeps the light budget bounded');
+  for(const time of [0,2,200]){
+   statue.userData.update(time);
+   for(const light of lights){
+    assert.equal(light.intensity>0,active,'updates must not ignite dormant candles');
+    assert.ok(Number.isFinite(light.intensity));
+    assert.ok(light.distance>0&&light.distance<2,'candlelight remains at the statue base');
+    assert.equal(light.castShadow,false);
+   }
+  }
+  statue.position.set(4,.11,7);statue.updateMatrixWorld(true);
+  for(const light of lights){
+   const offset=light.getWorldPosition(new THREE.Vector3()).sub(statue.position);
+   statue.position.x+=3;statue.updateMatrixWorld(true);
+   assert.ok(light.getWorldPosition(new THREE.Vector3()).sub(statue.position).distanceTo(offset)<1e-8);
+  }
+  if(!active){
+   const visibleLights=[];statue.traverseVisible(node=>{if(node.isLight)visibleLights.push(node);});
+   assert.equal(visibleLights.length,0,'dormant lights are excluded from rendering');
+  }
+ }
+});

@@ -1,6 +1,12 @@
 # TABOK — The Crossing
 
-Version: **v1.3.3 — Sanctuary Light · 2026.09.10.L1**
+Version: **v1.3.4 — Awakened Candles · 2026.09.10.L2**
+
+## v1.3.4 — Awakened Candles
+
+- Statue candles are off by default: dormant guardians retain their wax candles and dark wicks, with no flames or candle illumination.
+- Awakening ignites the flames and two warm local candle lights that illuminate the pedestal and lower robes and travel with the statue. Removes the former emissive imitation of candle bounce.
+- The guardian gallery uses the same activation-controlled lights. Reduced-motion mode keeps candlelight steady; no extra shadow passes are added.
 
 ## v1.3.3 — Sanctuary Light
 

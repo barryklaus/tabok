@@ -7,7 +7,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createGuardianStatue, GUARDIANS } from './guardian-statues.js?v=20260910G2';
+import { createGuardianStatue, GUARDIANS } from './guardian-statues.js?v=20260910L2';
 window.addEventListener('error',e=>document.querySelector('#error').textContent=e.message);
 window.addEventListener('unhandledrejection',e=>document.querySelector('#error').textContent=String(e.reason));
 const renderer=new THREE.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true,alpha:false});
@@ -16,7 +16,6 @@ const scene=new THREE.Scene();scene.background=new THREE.Color(0x08070d);scene.f
 const camera=new THREE.PerspectiveCamera(34,1,.05,70),controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,1.6,0);controls.minDistance=2;controls.maxDistance=23;controls.maxPolarAngle=Math.PI*.53;
 scene.add(new THREE.HemisphereLight(0xd7c4e5,0x241b19,1.1));
 for(const [color,power,pos] of [[0xffddbd,3.8,[3,6,5]],[0x8968cb,2.5,[-4,4,-3]],[0xb0bdde,1.1,[-4,3,4]]]) {const l=new THREE.DirectionalLight(color,power);l.position.set(...pos);scene.add(l);}
-const candle=new THREE.PointLight(0xff953f,3,6,2);candle.position.set(0,.55,1);scene.add(candle);
 const floor=new THREE.Mesh(new THREE.CircleGeometry(24,96),new THREE.MeshStandardMaterial({color:0x151019,roughness:.88,metalness:.15}));floor.rotation.x=-Math.PI/2;floor.position.y=-.005;scene.add(floor);
 let current=0,all=false,active=false,models=[];
 function rebuild(){

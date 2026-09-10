@@ -244,8 +244,8 @@ function relic(root,m,index) {
   }
   return g;
 }
-function candles(root,m,index) {
-  const flames=new THREE.Group();flames.name='Candle flames';root.add(flames);
+function candles(root,m,active) {
+  const flames=new THREE.Group();flames.name='Candle flames';flames.visible=active;root.add(flames);
   for(const side of [-1,1])for(let i=0;i<4;i++) {
     const x=side*(.35+(i%2)*.092),z=.20-Math.floor(i/2)*.23,h=.095+(i%3)*.047;
     cylinder(root,m.bronze,.049,.052,.025,[x,.385,z],10);
@@ -255,8 +255,15 @@ function candles(root,m,index) {
     const flame=orb(flames,m.fire,[x,.438+h,z],[.019,.051,.019],10);flame.rotation.z=side*.1;
     orb(flames,m.hot,[x,.422+h,z+.001],[.009,.026,.01],8);
   }
-  // Warm emissive inlays imply candle bounce without six extra point lights.
-  for(const side of [-1,1])line(root,m.ember,[[side*.39,.40,.23],[side*.372,.57,.235],[side*.36,.72,.215]],.008);
+  // One local light per candle cluster illuminates wax, the pedestal and robes.
+  // Parenting to the flames keeps dormant statues completely unlit and lets
+  // awakened candlelight travel with the statue without extra shadow passes.
+  for(const side of [-1,1]) {
+    const light=new THREE.PointLight(0xffa34b,active ? .85 : 0,1.85,2);
+    light.name=side<0?'Left candlelight':'Right candlelight';
+    light.position.set(side*.42,.62,.25);
+    flames.add(light);
+  }
   return flames;
 }
 
@@ -278,20 +285,22 @@ export function createGuardianStatue(index=0,active=false) {
     bone:material(0xb5a28b,'bone'),wax:material(0xc7a374,'bone'),
     glass:new THREE.MeshStandardMaterial({color:0xb5a5be,transparent:true,opacity:.21,roughness:.16,metalness:.3,side:THREE.DoubleSide,depthWrite:false}),
     sand:new THREE.MeshStandardMaterial({color:0xffc27a,emissive:0xd17017,emissiveIntensity:.5}),
-    fire:new THREE.MeshBasicMaterial({color:0xff8e27}),hot:new THREE.MeshBasicMaterial({color:0xffe9b0}),
-    ember:new THREE.MeshStandardMaterial({color:0x8e552a,emissive:0xf57921,emissiveIntensity:.65})
+    fire:new THREE.MeshBasicMaterial({color:0xff8e27,toneMapped:false}),hot:new THREE.MeshBasicMaterial({color:0xffe9b0,toneMapped:false})
   };
   pedestal(root,m);robes(root,m);hood(root,m);handsAndSleeves(root,m,index);
-  const crown=halo(root,m,index);relic(root,m,index);candles(root,m,index);
+  const crown=halo(root,m,index);relic(root,m,index);const candleFlames=candles(root,m,active);
+  const candleLights=candleFlames.children.filter(node=>node.isPointLight);
+  const reducedMotion=typeof matchMedia==='function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   finish(root);
   root.traverse(node=>{if(node.isMesh){node.castShadow=false;node.receiveShadow=false;node.userData.preserveMaterial=true;node.userData.actorModelMesh=true;}});
   let mode='idle';
   root.userData.guardian={...definition,index,active};
   root.userData.setMode=value=>{mode=value;};
   root.userData.update=time=>{
-    const flicker=.90+Math.sin(time*9.1+index)*.06+Math.sin(time*14.3+index*2)*.04;
-    m.fire.color.setRGB(1,.29*flicker,.025);m.ember.emissiveIntensity=.58*flicker;
     if(active) {
+      const flicker=reducedMotion?1:.94+Math.sin(time*9.1+index)*.04+Math.sin(time*14.3+index*2)*.02;
+      m.fire.color.setRGB(1,.29*flicker,.025);
+      candleLights.forEach(light=>{light.intensity=.85*flicker;});
       const awakening=(root.userData.activationUntil||0)>performance.now();
       const pulse=awakening?1:.18+.08*Math.sin(time*1.5+index);
       crown.rotation.z=Math.sin(time*.24+index)*.045+(mode==='move'?.025:0);
