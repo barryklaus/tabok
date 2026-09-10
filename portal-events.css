@@ -1,0 +1,60 @@
+/* Portal-local cards: transparent positioning layer, never a full-screen curtain. */
+body:has(#messageOverlay.portal-local:not(.hidden))>.shell{visibility:visible!important}
+#messageOverlay.portal-local{position:fixed!important;inset:0!important;padding:0!important;background:none!important;backdrop-filter:none!important;overflow:visible!important;pointer-events:none!important;display:block!important;z-index:100!important}
+#messageOverlay.portal-local.hidden{display:none!important}
+#messageOverlay.portal-local:before,#messageOverlay.portal-local:after{display:none!important}
+#messageOverlay.portal-local .dialog{position:absolute!important;left:clamp(184px,var(--portal-screen-x,50vw),calc(100vw - 184px));top:clamp(76px,calc(var(--portal-screen-y,50dvh) - 330px),calc(100dvh - 370px));transform:translateX(-50%);width:min(360px,calc(100vw - 16px))!important;height:auto!important;max-height:min(360px,calc(100dvh - 96px))!important;padding:14px!important;margin:0!important;overflow:auto!important;pointer-events:auto!important;border:1px solid #bc86bd!important;border-radius:14px!important;clip-path:none!important;background:radial-gradient(ellipse at 50% 0,#44204d 0,transparent 65%),linear-gradient(145deg,#140f20f5,#090811f5)!important;box-shadow:0 10px 32px #0009,0 0 25px #ad4ece44,inset 0 0 16px #ab5ed51a!important;animation:portalCardArrive .32s ease-out both!important;color:#eee3f5}
+#messageOverlay.portal-local .dialog:before,#messageOverlay.portal-local .dialog:after,#messageOverlay.portal-local .judgment-seal,#messageOverlay.portal-local h2:after{display:none!important}
+#messageOverlay.portal-local .eyebrow{margin:0 0 5px!important;font:700 9px/1.25 system-ui!important;letter-spacing:.16em!important;color:#cba5ef}
+#messageOverlay.portal-local h2{margin:0 0 10px!important;font:600 22px/1.1 Georgia,serif!important;letter-spacing:0!important;text-transform:none!important;text-shadow:none!important;overflow-wrap:anywhere}
+#messageOverlay.portal-local .portal-inventory{margin:4px 0 8px!important;font-size:9px!important;gap:6px!important}
+#messageOverlay.portal-local .portal-inventory b{font-size:13px!important;padding:3px 6px!important}
+#messageOverlay.portal-local .portal-card-progress{display:none!important}
+#messageOverlay.portal-local .cards{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin:8px 0!important;padding:0!important;overflow:visible!important;scroll-snap-type:none!important}
+#messageOverlay.portal-local .portal-card-choice{display:grid!important;gap:5px!important;min-width:0!important;width:auto!important;flex-basis:auto!important;scroll-snap-align:none!important}
+#messageOverlay.portal-local .card,#messageOverlay.portal-local .portal-card-flip{width:100%!important;min-width:0!important;height:86px!important;min-height:86px!important;margin:0!important}
+#messageOverlay.portal-local .portal-card-face,#messageOverlay.portal-local .portal-card-back{padding:8px 3px!important;min-width:0!important;border-radius:5px!important;overflow:hidden!important}
+#messageOverlay.portal-local .portal-combination-art{font-size:7px!important;letter-spacing:.04em!important;line-height:1.2!important;margin:0 0 8px!important}
+#messageOverlay.portal-local .portal-combination-art>small{font-size:7px!important;letter-spacing:.03em!important}
+#messageOverlay.portal-local .portal-pattern{display:flex!important;justify-content:center!important;gap:1px!important;white-space:nowrap!important}
+#messageOverlay.portal-local .rune-digit{flex:0 1 24px!important;min-width:0!important;width:24px!important;height:31px!important;font:700 21px/31px Georgia,serif!important}
+#messageOverlay.portal-local .rune-separator{font-size:8px!important;margin:0!important;line-height:31px!important}
+.rune-digit.number-rolling{color:#fff3ff!important;filter:blur(.45px) brightness(1.45);transform:translateY(-1px) scale(1.06);text-shadow:0 0 7px #fff,0 0 18px #ee70dd!important}
+.rune-digit.number-landed{animation:portalNumberLand .42s cubic-bezier(.15,.85,.2,1) both}
+#messageOverlay.portal-local .portal-replace{min-height:39px!important;padding:5px 2px!important;letter-spacing:0!important}
+#messageOverlay.portal-local .portal-replace span{font-size:9px!important;letter-spacing:0!important}
+#messageOverlay.portal-local .portal-replace small{font-size:7px!important;letter-spacing:0!important}
+#messageOverlay.portal-local .result{margin:8px 0!important;padding:8px!important;font:400 12px/1.4 system-ui!important;letter-spacing:0!important;border:0!important;border-left:2px solid #c587d8!important;background:#b470cc12!important;text-align:left!important;overflow-wrap:anywhere}
+#messageOverlay.portal-local #messageContinue{width:100%!important;min-height:42px!important;padding:9px!important;margin:2px 0 0!important;font:700 11px/1.25 system-ui!important;letter-spacing:.08em!important;border-radius:6px!important;box-shadow:none!important}
+#messageOverlay.portal-local .major-summon-reveal{display:none!important}
+#messageOverlay.portal-local .portal-combination-art>small{font-size:9px!important;letter-spacing:.08em!important}
+#messageOverlay.portal-local .portal-replace span{font-size:11px!important}
+#messageOverlay.portal-local .portal-replace small{font-size:10px!important}
+#messageOverlay.portal-local .reckoning-word{font:700 9px/1.2 system-ui!important;letter-spacing:.02em!important}
+#messageOverlay.portal-local.portal-revealing .portal-replace{pointer-events:none!important;opacity:.4}
+.portal-magic-words{position:fixed;z-index:85;left:clamp(135px,var(--portal-screen-x,50vw),calc(100vw - 135px));top:clamp(110px,calc(var(--portal-screen-y,50dvh) - 75px),calc(100dvh - 90px));width:min(430px,calc(100vw - 20px));transform:translate(-50%,-100%);text-align:center;pointer-events:none;display:none;color:#f1dcff;text-shadow:0 2px 6px #000,0 0 12px #ad55f9,0 0 26px #9c45ee;filter:none}
+.portal-magic-words.visible{display:block;animation:portalWordsRise .7s ease-out both}
+.portal-magic-words small{display:block;font:700 10px/1.4 system-ui;letter-spacing:.25em;margin-bottom:8px}
+.portal-magic-words strong{display:block;font:500 clamp(22px,3vw,36px)/1.08 Georgia,serif;overflow-wrap:anywhere}
+.portal-magic-words[data-kind=crossing]{color:#d1fff0;text-shadow:0 2px 6px #000,0 0 16px #79eac7}
+.portal-magic-words[data-kind=rejection],.portal-magic-words[data-kind=death]{color:#ffc4db;text-shadow:0 2px 6px #000,0 0 16px #e0468b}
+.portal-magic-words[data-kind=pounce]{color:#ffc4fa;text-shadow:0 2px 6px #000,0 0 16px #ef62e2}
+.actor-speech-bubble{position:fixed;z-index:92;max-width:min(230px,58vw);padding:9px 13px;border:1px solid rgba(255,225,160,.86);border-radius:14px 14px 14px 4px;background:linear-gradient(145deg,rgba(28,18,31,.96),rgba(10,8,13,.97));box-shadow:0 7px 22px rgba(0,0,0,.62),0 0 18px rgba(181,83,232,.28),inset 0 0 0 1px rgba(255,255,255,.06);color:#fff1cf;font:800 12px/1.28 system-ui,sans-serif;letter-spacing:.025em;text-align:center;pointer-events:none;transform:translate(-50%,-115%) scale(.86);transform-origin:20% 100%;opacity:0;animation:actorSpeechIn .24s cubic-bezier(.2,.85,.2,1.2) forwards}.actor-speech-bubble:after{content:"";position:absolute;left:18%;bottom:-7px;width:12px;height:12px;border-right:1px solid rgba(255,225,160,.86);border-bottom:1px solid rgba(255,225,160,.86);background:#100c14;transform:rotate(45deg)}.actor-speech-bubble.leaving{animation:actorSpeechOut .22s ease forwards}@keyframes actorSpeechIn{to{opacity:1;transform:translate(-50%,-115%) scale(1)}}@keyframes actorSpeechOut{to{opacity:0;transform:translate(-50%,-128%) scale(.94)}}
+.actor-speech-bubble.heart-loss{min-width:62px;padding:7px 12px;border-color:#ff6179;border-radius:18px;background:radial-gradient(circle,#8d1734,#310914 72%);box-shadow:0 0 22px #ff234f,0 7px 18px #000;color:#fff0f2;font:900 18px/1 Georgia,serif;letter-spacing:.06em;animation:heartLossBurst 1.65s cubic-bezier(.18,.82,.24,1) forwards}.actor-speech-bubble.heart-loss:after{display:none}@keyframes heartLossBurst{0%{opacity:0;transform:translate(-50%,-70%) scale(.35) rotate(-8deg)}16%{opacity:1;transform:translate(-50%,-120%) scale(1.22) rotate(4deg)}68%{opacity:1;transform:translate(-50%,-145%) scale(1)}100%{opacity:0;transform:translate(-50%,-190%) scale(.82)}}
+.portal-verdict{opacity:0;transform:translateY(9px) scale(.96);animation:portalVerdictArrive .48s cubic-bezier(.18,.82,.24,1.12) var(--verdict-delay,0ms) forwards}.portal-verdict.match{border-color:#f5cf69!important;background:linear-gradient(135deg,rgba(97,61,12,.84),rgba(25,15,5,.94))!important;box-shadow:0 0 26px rgba(255,199,55,.58),inset 0 0 24px rgba(255,224,131,.16);color:#fff1a8!important}.portal-verdict.match b,.portal-verdict.match em{color:#ffe172!important;text-shadow:0 0 11px #ffb21c}.portal-verdict.no-match{border-color:#a14672!important}@keyframes portalVerdictArrive{to{opacity:1;transform:none}}
+.portal-magic-words[data-kind=fireball]{color:#ffd39b;text-shadow:0 2px 6px #000,0 0 14px #ff7229,0 0 28px #b51f17}
+@keyframes portalCardArrive{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
+@keyframes portalWordsRise{from{opacity:0;translate:0 20px}to{opacity:1;translate:0 0}}
+@keyframes portalNumberLand{0%{transform:scale(1.22);filter:brightness(2.1);box-shadow:0 0 20px #f5a9ec}100%{transform:none;filter:none}}
+@media(max-width:500px){#messageOverlay.portal-local .dialog{left:50vw;top:clamp(72px,calc(var(--portal-screen-y,50dvh) - 310px),calc(100dvh - 340px));width:min(340px,calc(100vw - 16px))!important;max-height:min(330px,calc(100dvh - 90px))!important;padding:12px!important}.portal-magic-words{left:50vw}}
+@media(max-height:500px){#messageOverlay.portal-local .dialog{top:64px!important;max-height:calc(100dvh - 76px)!important;width:340px!important}#messageOverlay.portal-local h2{font-size:18px!important}.portal-magic-words{top:max(105px,calc(var(--portal-screen-y,50dvh) - 40px))}}
+@media(prefers-reduced-motion:reduce){.portal-magic-words.visible,#messageOverlay.portal-local .dialog,.actor-speech-bubble{animation:none!important;opacity:1}}
+.actor-speech-bubble{border-radius:14px!important;transform-origin:50% 100%!important}.actor-speech-bubble:after{left:50%!important;transform:translateX(-50%) rotate(45deg)!important}
+@media(max-height:500px){
+ #messageOverlay.portal-local .dialog{padding:8px!important}
+ #messageOverlay.portal-local .card,#messageOverlay.portal-local .portal-card-flip{height:64px!important;min-height:64px!important}
+ #messageOverlay.portal-local .portal-card-face{padding:4px!important}
+ #messageOverlay.portal-local .portal-combination-art{gap:5px!important;margin:0!important}
+ #messageOverlay.portal-local .result{padding:5px!important;margin:6px 0!important}
+ #messageOverlay.portal-local #messageContinue{min-height:38px!important;padding:7px!important}
+}

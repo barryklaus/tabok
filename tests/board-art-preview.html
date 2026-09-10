@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<base href="../"><title>TABOK · Board art check</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#050305;color:#decda9;font:14px system-ui}header{height:62px;display:flex;align-items:center;gap:16px;padding:12px 20px;background:#15120f}button,select{background:#28221b;border:1px solid #74613c;color:#ebd5a8;padding:8px;border-radius:4px}#stage{height:calc(100dvh - 62px);position:relative}canvas{display:block;width:100%;height:100%}output{font-size:12px;margin-left:auto}#actorTooltip{display:none}#error{position:absolute;top:80px;left:20px;color:#ff9797}@media(max-width:650px){header{height:108px;flex-wrap:wrap;gap:8px}#stage{height:calc(100dvh - 108px)}output{margin:0;width:100%}}
+</style><script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script></head>
+<body><header><strong>Fractured Sanctuary · Art check</strong><select id="quality" aria-label="Quality"><option value="full">High Fidelity 60</option><option value="auto">Cinematic maximum</option><option value="ultra">Performance</option><option value="lite">Battery saver</option></select><button id="orbit">Orbit view</button><button id="reset">Reset view</button><button id="major">Major escalation</button><output id="stats">Preparing board…</output></header><div id="stage"><canvas id="board" aria-label="Board art preview"></canvas></div><div id="actorTooltip"></div><p id="error" role="alert"></p>
+<script type="module">
+import { TabokTrue3DBoard } from './true3d-board.js?v=20260907R4';
+const error = document.getElementById('error');
+window.addEventListener('error', event => error.textContent = event.message);
+window.addEventListener('unhandledrejection', event => error.textContent = String(event.reason));
+try {
+  const html = await (await fetch('index.html')).text();
+  const columns = JSON.parse(html.match(/const COLUMNS=(\{[^\n]+\});/)[1]);
+  const cells = Object.entries(columns).flatMap(([q,c]) => [...c.cells].map((type,i) => ({ q:+q,r:c.r0+i,type })));
+  const board = new TabokTrue3DBoard(document.getElementById('board'), { cells, onHex:id => document.getElementById('stats').dataset.lastHex = id });
+  await board.ready;
+  const state = { players:[
+    { id:'P1',charId:'misty',pos:'0,4',color:'#ff7957' },
+    { id:'P2',charId:'cliff',pos:'0,18',color:'#54b8ee' },
+    { id:'P3',charId:'paige',pos:'7,4',color:'#80cc64' },
+    { id:'P4',charId:'justin',pos:'-7,18',color:'#dfb343' },
+    { id:'P5',charId:'sue',pos:'7,11',color:'#f174b9' },
+    { id:'P6',charId:'wanday',pos:'-7,11',color:'#b086eb' }
+  ], monsters:[{id:'M1',pos:'-2,11'}], equipment:[['-3,8',['S']],['6,8',['S']],['-3,17',['S']],['3,5',['A']],['-6,14',['A']],['3,14',['A']]],runes:[],legal:[],portalLegal:false,turnColor:'#ead7a1'};
+  // Explicit positions for the six preview Rune Dice, in the actual board coordinate system.
+  state.runes = [['-5,8',1],['5,3',1],['9,8',1],['5,17',1],['-5,19',1],['-9,14',1]];
+  board.syncState(state);
+  document.getElementById('quality').onchange = event => board.setQuality(event.target.value);
+  document.getElementById('orbit').onclick = () => board.orbitCamera(1);
+  document.getElementById('reset').onclick = () => board.resetCamera();
+  document.getElementById('major').onclick = () => {
+    if (state.monsters.length > 1) state.monsters.pop(); else state.monsters.push({id:'MAJOR',major:true,pos:'3,11'});
+    board.syncState(state);
+  };
+  let frames = [], previous = performance.now(), lastReport = previous;
+  const measure = now => {
+    frames.push(now - previous); previous = now;
+    if (now - lastReport > 2000) {
+      const sorted = frames.filter(n => n < 500).sort((a,b)=>a-b);
+      const average = sorted.reduce((a,b)=>a+b,0)/sorted.length;
+      const info = board.renderer.info;
+      document.getElementById('stats').textContent = `${Math.round(1000/average)} FPS · p95 ${sorted[Math.floor(sorted.length*.95)]?.toFixed(1)}ms · ${info.render.calls} draws · ${info.render.triangles.toLocaleString()} triangles · ${info.memory.textures} textures · scale ${board.renderRatio.toFixed(2)}`;
+      frames=[];lastReport=now;
+    }
+    requestAnimationFrame(measure);
+  };
+  requestAnimationFrame(measure);
+} catch (e) { error.textContent = String(e); }
+</script></body></html>
