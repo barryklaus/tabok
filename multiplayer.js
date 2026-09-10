@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v1.0.0 The Balance · A1';
+  const VERSION = 'v1.1.0 Awakened Judges · B1';
   const TOKEN_KEY = 'tabok-multiplayer-token';
   const NAME_KEY = 'tabok-multiplayer-name';
   const ACTIVE_ROOM_KEY = 'tabok-active-guest-room';
@@ -682,7 +682,7 @@
 
   function localOwnsSlot(slot) { return seatForSlot(slot)?.owner === token; }
   function localOwnsActive() { return !!(game && active() && localOwnsSlot(active().p)); }
-  function localCanViewTurnRoll(player = active()) { return !!(room?.phase === 'game' && game?.phase === 'roll' && player?.controller === 'human' && localOwnsSlot(player.p)); }
+  function localCanViewTurnRoll(player = active()) { return !!(room?.phase === 'game' && (game?.phase === 'choose' || game?.phase === 'roll') && player?.controller === 'human' && localOwnsSlot(player.p)); }
   function route3DHex(id) {
     if (!room || room.phase !== 'game') return false;
     if (!localOwnsActive()) { showRoomNotice('Waiting for the assigned Traveler on their device.'); return true; }
@@ -729,7 +729,7 @@
     if(target.closest('.portal-target'))return{kind:'portal'};
     const button=target.closest('button'); if(!button)return null;
     if(button.id)return{kind:'button',id:button.id,scope:button.closest('#messageOverlay')?'message':'game'};
-    const dataKeys=['groupAnswer','answerIndex','trivia','replace','runePower','runeTarget','plunderAdd','plunderRemove','plunderBack','plunderConfirm'];
+    const dataKeys=['turnType','groupAnswer','answerIndex','trivia','replace','runePower','runeTarget','plunderAdd','plunderRemove','plunderBack','plunderConfirm'];
     const data={}; dataKeys.forEach(key=>{if(button.dataset[key]!==undefined)data[key]=button.dataset[key]});
     return{kind:'button',data,aria:button.getAttribute('aria-label')||'',text:button.textContent.trim().replace(/\s+/g,' '),scope:button.closest('#messageOverlay')?'message':'game'};
   }

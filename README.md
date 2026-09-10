@@ -1,6 +1,14 @@
 # TABOK — The Crossing
 
-Version: **v1.0.0 — The Balance · 2026.09.10.A1**
+Version: **v1.1.0 — Awakened Judges · 2026.09.10.B1**
+
+## v1.1.0 — Awakened Judges
+
+- Every human turn now opens a private celestial ritual for choosing the complete Normal, Rune, or Offer dice set before rolling.
+- Removes Armor and Shield pickups, protection rules, inventory states, rendering, and AI equipment goals.
+- The six original stone statues are now the minor monsters themselves: each unique Judge awakens in place, activates its rotating crown, and glides continuously across its path.
+- Removes both real-time and contact shadows from the Judge statues for a cleaner silhouette and lower rendering cost.
+- Rewrites Rules & Codex for The Balance while keeping its exact Portal odds secret and describing favorable treasure burdens only in atmospheric terms.
 
 ## v1.0.0 — The Balance
 

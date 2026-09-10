@@ -230,13 +230,32 @@ test('Gilded Fate uses reference-matched treasure art and engraved symbol dice',
   assert.match(html,new RegExp(asset.replaceAll('.','\\.')));
   assert.ok(fs.existsSync(path.join(root,asset)),`${name} production icon must exist`);
  }
- assert.match(html,/true3d-dice\.js\?v=20260910A1/);
+ assert.match(html,/true3d-dice\.js\?v=20260910B1/);
  assert.match(dice,/Celestial face plate/);
  assert.match(dice,/new Path2D\('M86 28H426/);
  assert.match(dice,/context\.fillText\(String\(value\),256,264\)/);
  assert.match(dice,/const treasureChest=/);
  assert.match(dice,/const hood=/);
  assert.match(dice,/faceTexture\(label, kind, faceIndex\)/);
+});
+
+test('Awakened Judges removes equipment and uses one private turn ritual',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'celestial-ui.css'),'utf8');
+ const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
+ assert.match(html,/game\.phase==='choose',rolling=game\.phase==='roll'/);
+ assert.match(html,/turn-die-selection/);
+ assert.match(html,/equipment:new Map\(\)/);
+ assert.doesNotMatch(html,/shield:false,armor:false/);
+ assert.doesNotMatch(html,/1-1-1/);
+ assert.match(css,/every human turn begins with one private die ritual/);
+ assert.match(board,/makeJudgeModel\(index = 0, active = false\)/);
+ assert.match(html,/const JUDGE_SITES=\['-3,17','3,14','6,8','3,5','-3,8','-6,14'\]/);
+ assert.match(board,/const JUDGE_SITES = \['-3,17','3,14','6,8','3,5','-3,8','-6,14'\]/);
+ assert.match(board,/actor\.statue \|\| 0/);
+ assert.match(board,/continuousJudge \? t/);
+ assert.match(board,/node\.castShadow=false;node\.receiveShadow=false/);
+ assert.doesNotMatch(board,/createMonsterPilot\(major \? 'major' : 'minor'\)/);
 });
 
 test('Celestial Concord unifies notices and renders the sculpted Traveler bust',()=>{

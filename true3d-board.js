@@ -25,6 +25,7 @@ const PLAYER_ART = {
   paige: 'assets/traveler-2-0.png', justin: 'assets/traveler-3-0.png',
   sue: 'assets/traveler-4-0.png', wanday: 'assets/traveler-5-0.png'
 };
+const JUDGE_SITES = ['-3,17','3,14','6,8','3,5','-3,8','-6,14'];
 
 function parse(id) {
   const [q, r] = id.split(',').map(Number);
@@ -570,20 +571,28 @@ export class TabokTrue3DBoard {
     this.scene.add(this.faultlinePlane);
   }
 
+  makeJudgeModel(index = 0, active = false) {
+    const judge=new THREE.Group();judge.name=(active?'Awakened':'Dormant')+' Judge '+(index+1);
+    const stone=new THREE.MeshStandardMaterial({color:active?0x393040:0x302936,roughness:.94,metalness:.04,emissive:active?0x35104d:0x16091f,emissiveIntensity:active?.34:.16});
+    const crown=new THREE.MeshBasicMaterial({color:active?0xc56aff:0x7d3b9b,transparent:true,opacity:active?.72:.28,depthWrite:false});
+    const body=new THREE.Mesh(index%2?new THREE.CylinderGeometry(.32+.04*(index%3),.56,1.62,5+index%3):new THREE.ConeGeometry(.62,1.75,5+index%2),stone);
+    body.position.y=1.05;body.rotation.y=index*.71;judge.add(body);
+    const headGeometry=index===0?new THREE.ConeGeometry(.34,.72,4):index===1?new THREE.SphereGeometry(.34,7,5):index===2?new THREE.BoxGeometry(.5,.62,.4):index===3?new THREE.CylinderGeometry(.24,.39,.68,6):index===4?new THREE.TetrahedronGeometry(.43):new THREE.OctahedronGeometry(.39);
+    const head=new THREE.Mesh(headGeometry,stone);head.position.y=2.12;head.rotation.set(index*.08,index*.43,index===4?.22:0);judge.add(head);
+    const limbGeometry=new THREE.CylinderGeometry(.09,.13,1.38,5);for(let side=-1;side<=1;side+=2){const limb=new THREE.Mesh(limbGeometry,stone);limb.position.set(side*(.48+index*.025),1.05+(index%2)*.18,0);limb.rotation.z=side*(.22+index*.055);judge.add(limb)}
+    const halo=new THREE.Mesh(new THREE.TorusGeometry(.5+index*.035,.025,5,24),crown);halo.position.y=2.2;halo.rotation.x=Math.PI/2+(index%2)*.35;halo.userData.judgeCrown=true;judge.add(halo);
+    judge.traverse(node=>{if(node.isMesh){node.castShadow=false;node.receiveShadow=false;node.userData.preserveMaterial=true;node.userData.actorModelMesh=true}});
+    if(active){judge.userData.update=time=>{halo.rotation.z=time*1.45+index*.83;const awakening=(judge.userData.activationUntil||0)>performance.now()?1:0,flare=Math.max(awakening,Math.pow(Math.max(0,Math.sin(time*.92+index*1.37)),12));crown.opacity=.58+flare*.42;stone.emissiveIntensity=.28+flare*.9};judge.userData.setMode=()=>{}}
+    return judge;
+  }
+
   makeDormantJudges() {
     this.dormantJudgeRoot=new THREE.Group();this.dormantJudgeRoot.name='The Six — dormant judges';this.scene.add(this.dormantJudgeRoot);
     this.dormantJudges=[];
-    const stone=new THREE.MeshStandardMaterial({color:0x302936,roughness:.94,metalness:.04,emissive:0x16091f,emissiveIntensity:.16});
-    const crack=new THREE.MeshBasicMaterial({color:0x7d3b9b,transparent:true,opacity:.34});
     for(let index=0;index<6;index++){
-      const angle=index*Math.PI/3,radius=6.35,judge=new THREE.Group();judge.name='Dormant Judge '+(index+1);
-      const body=new THREE.Mesh(index%2?new THREE.CylinderGeometry(.32+.04*(index%3),.56,1.62,5+index%3):new THREE.ConeGeometry(.62,1.75,5+index%2),stone);
-      body.position.y=1.05;body.rotation.y=index*.71;judge.add(body);
-      const headGeometry=index===0?new THREE.ConeGeometry(.34,.72,4):index===1?new THREE.SphereGeometry(.34,7,5):index===2?new THREE.BoxGeometry(.5,.62,.4):index===3?new THREE.CylinderGeometry(.24,.39,.68,6):index===4?new THREE.TetrahedronGeometry(.43):new THREE.OctahedronGeometry(.39);
-      const head=new THREE.Mesh(headGeometry,stone);head.position.y=2.12;head.rotation.set(index*.08,index*.43,index===4?.22:0);judge.add(head);
-      const limbGeometry=new THREE.CylinderGeometry(.09,.13,1.38,5);for(let side=-1;side<=1;side+=2){const limb=new THREE.Mesh(limbGeometry,stone);limb.position.set(side*(.48+index*.025),1.05+(index%2)*.18,0);limb.rotation.z=side*(.22+index*.055);judge.add(limb)}
-      const halo=new THREE.Mesh(new THREE.TorusGeometry(.5+index*.035,.025,5,18),crack.clone());halo.position.y=2.2;halo.rotation.x=Math.PI/2+(index%2)*.35;judge.add(halo);
-      judge.position.set(Math.sin(angle)*radius,.11,Math.cos(angle)*radius);judge.rotation.y=Math.atan2(-judge.position.x,-judge.position.z);judge.scale.setScalar(.86);judge.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true}});this.dormantJudgeRoot.add(judge);this.dormantJudges.push(judge)
+      const judge=this.makeJudgeModel(index,false),position=worldFor(JUDGE_SITES[index]);
+      judge.position.copy(position);judge.rotation.y=Math.atan2(-position.x,-position.z);judge.scale.setScalar(.52);
+      this.dormantJudgeRoot.add(judge);this.dormantJudges.push(judge)
     }
   }
 
@@ -1037,11 +1046,12 @@ export class TabokTrue3DBoard {
   makeActor(actor) {
     const group = new THREE.Group();
     const major = actor.major;
+    const awakenedJudge = actor.kind === 'monster' && !major;
     let visual;
     try {
-      visual = actor.kind === 'player' ? createTravelerPilot(actor.charId || 'misty') : createMonsterPilot(major ? 'major' : 'minor');
+      visual = actor.kind === 'player' ? createTravelerPilot(actor.charId || 'misty') : major ? createMonsterPilot('major') : this.makeJudgeModel(Math.max(0,(Number(actor.statue)||1)-1),true);
       // Keep silhouettes readable without letting them spill beyond their board hex.
-      const scale = actor.kind === 'player' ? (actor.charId === 'justin' ? .33 : .36) : major ? .36 : .47;
+      const scale = actor.kind === 'player' ? (actor.charId === 'justin' ? .33 : .36) : major ? .36 : .52;
       visual.scale.setScalar(scale);
       visual.position.y = 0;
       visual.traverse(node => {
@@ -1063,12 +1073,7 @@ export class TabokTrue3DBoard {
       console.warn('TABOK 3D actor unavailable; using illustrated fallback.', error);
       if (actor.kind === 'player') visual = this.makeSprite(PLAYER_ART[actor.charId] || PLAYER_ART.misty, 1.18, 1.65);
       else if (major) visual = this.makeSprite('assets/major-monster-fullbody-v1.png', 1.8, 2.65);
-      else {
-        visual = this.makeSprite('assets/monster-sprite.png', 1.34, 1.5, .2);
-        visual.material.map.repeat.set(1 / 4, 1);
-        visual.material.map.offset.set(0,0);
-        visual.center.x=.47;
-      }
+      else visual = this.makeJudgeModel(Math.max(0,(Number(actor.statue)||1)-1),true);
       visual.position.y = 0;
       group.add(visual);
     }
@@ -1077,15 +1082,17 @@ export class TabokTrue3DBoard {
     group.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(visual);
     if (Number.isFinite(bounds.min.y)) visual.position.y += (major ? .26 : 0) - bounds.min.y;
-    const contact = new THREE.Mesh(new THREE.PlaneGeometry(major ? 1.35 : .85, major ? 1.35 : .85), this.contactShadowMaterial.clone());
-    contact.rotation.x = -Math.PI / 2;
-    contact.position.y = .009;
-    contact.material.opacity = major ? .35 : .85;
-    contact.raycast = () => {};
-    group.add(contact);
+    if (!awakenedJudge) {
+      const contact = new THREE.Mesh(new THREE.PlaneGeometry(major ? 1.35 : .85, major ? 1.35 : .85), this.contactShadowMaterial.clone());
+      contact.rotation.x = -Math.PI / 2;
+      contact.position.y = .009;
+      contact.material.opacity = major ? .35 : .85;
+      contact.raycast = () => {};
+      group.add(contact);
+    }
     if (!group.userData.summoning && !group.userData.departing) group.position.copy(worldFor(actor.pos));
     group.userData.actorId = actor.id;
-    group.userData.actorKey = `${actor.kind}|${actor.charId || ''}|${major ? 1 : 0}`;
+    group.userData.actorKey = `${actor.kind}|${actor.charId || ''}|${major ? 1 : 0}|${actor.statue || 0}`;
     group.userData.actorKind = actor.kind;
     group.userData.major = !!major;
     group.userData.heading = visual?.rotation.y || 0;
@@ -1121,7 +1128,7 @@ export class TabokTrue3DBoard {
   }
 
   syncActor(actor) {
-    const actorKey = `${actor.kind}|${actor.charId || ''}|${actor.major ? 1 : 0}`;
+    const actorKey = `${actor.kind}|${actor.charId || ''}|${actor.major ? 1 : 0}|${actor.statue || 0}`;
     let group = this.actors.get(actor.id);
     if (group && group.userData.actorKey !== actorKey) {
       this.removeActor(actor.id);
@@ -1418,6 +1425,12 @@ export class TabokTrue3DBoard {
     this.playActorAction(id,type==='rune'?'rune':'receive',type==='rune'?1250:900);
   }
 
+  activateJudge(id) {
+    const actor=this.actors.get(id),visual=actor?.userData.visual3D;if(!actor||!visual)return;
+    visual.userData.activationUntil=performance.now()+1500;
+    this.focusOn(id);
+  }
+
 
   animateActor(id, from, to, duration = 320, traversal = {}) {
     const actor = this.actors.get(id);
@@ -1435,10 +1448,11 @@ export class TabokTrue3DBoard {
     return new Promise(resolve => {
       const step = now => {
         const t = Math.min(1, (now - started) / duration);
-        const eased = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        const continuousJudge = actor.userData.actorKind === 'monster' && !actor.userData.major;
+        const eased = continuousJudge ? t : t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
         if(visual)visual.rotation.y=priorHeading+headingDelta*Math.min(1,t/.18);
         actor.position.lerpVectors(start, end, eased);
-        if (t < 1) requestAnimationFrame(step); else { actor.position.copy(end);if(visual)visual.rotation.y=targetHeading;visual?.userData.setMode?.('idle');resolve(); }
+        if (t < 1) requestAnimationFrame(step); else { actor.position.copy(end);if(visual)visual.rotation.y=targetHeading;if(!continuousJudge||journeyStep>=journeyLength-1)visual?.userData.setMode?.('idle');resolve(); }
       };
       requestAnimationFrame(step);
     });

@@ -8,16 +8,16 @@ const portalVisualPending = new Set();
 function portalActorDescriptor(actor) {
   return actor.p
     ? {id:actor.p,kind:'player',pos:actor.pos,charId:actor.charId,color:actor.color,name:actor.name}
-    : {id:actor.id,kind:'monster',pos:actor.pos,major:Boolean(actor.major),name:actor.major?'The Sovereign':actor.id};
+    : {id:actor.id,kind:'monster',pos:actor.pos,major:Boolean(actor.major),statue:Number(actor.statue)||0,name:actor.major?'The Sovereign':actor.id};
 }
 
 function receivePortalVisual(event) {
   if (!['major','minor','crossing','rejection','death','pounce','fireball'].includes(event?.type) || typeof event.id!=='string') return Promise.resolve();
   const actor=event.actor;
-  if (!actor || !/^(P[1-6]|M[1-3]|MAJOR)$/.test(actor.id) || !['player','monster'].includes(actor.kind)) return Promise.resolve();
+  if (!actor || !/^(P[1-6]|M[1-6]|MAJOR)$/.test(actor.id) || !['player','monster'].includes(actor.kind)) return Promise.resolve();
   const validPosition=pos=>pos==='PORTAL'||(typeof pos==='string'&&/^-?\d{1,2},\d{1,2}$/.test(pos));
   if(!validPosition(actor.pos)||(event.destination&&!validPosition(event.destination)))return Promise.resolve();
-  if(event.paths&&(!Array.isArray(event.paths)||event.paths.length>3||event.paths.some(path=>!Array.isArray(path)||path.length>30||path.some(pos=>!validPosition(pos)))))return Promise.resolve();
+  if(event.paths&&(!Array.isArray(event.paths)||event.paths.length>6||event.paths.some(path=>!Array.isArray(path)||path.length>30||path.some(pos=>!validPosition(pos)))))return Promise.resolve();
   const generation=portalVisualGeneration;
   const ready=webglBoard?.ready || (async()=>{
     const started=performance.now();
