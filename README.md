@@ -1,6 +1,10 @@
 # TABOK — The Crossing
 
-Version: **v1.1.0 — Awakened Judges · 2026.09.10.B1**
+Version: **v1.1.1 — Awakened Judges · 2026.09.10.B2**
+
+## v1.1.1 — Statue Scale Restoration
+
+- Restores all six dormant and awakened Judge statues to their original `0.86` presentation scale after moving them onto the former equipment hexes.
 
 ## v1.1.0 — Awakened Judges
 

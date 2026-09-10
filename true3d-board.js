@@ -591,7 +591,7 @@ export class TabokTrue3DBoard {
     this.dormantJudges=[];
     for(let index=0;index<6;index++){
       const judge=this.makeJudgeModel(index,false),position=worldFor(JUDGE_SITES[index]);
-      judge.position.copy(position);judge.rotation.y=Math.atan2(-position.x,-position.z);judge.scale.setScalar(.52);
+      judge.position.copy(position);judge.rotation.y=Math.atan2(-position.x,-position.z);judge.scale.setScalar(.86);
       this.dormantJudgeRoot.add(judge);this.dormantJudges.push(judge)
     }
   }
@@ -1051,7 +1051,7 @@ export class TabokTrue3DBoard {
     try {
       visual = actor.kind === 'player' ? createTravelerPilot(actor.charId || 'misty') : major ? createMonsterPilot('major') : this.makeJudgeModel(Math.max(0,(Number(actor.statue)||1)-1),true);
       // Keep silhouettes readable without letting them spill beyond their board hex.
-      const scale = actor.kind === 'player' ? (actor.charId === 'justin' ? .33 : .36) : major ? .36 : .52;
+      const scale = actor.kind === 'player' ? (actor.charId === 'justin' ? .33 : .36) : major ? .36 : .86;
       visual.scale.setScalar(scale);
       visual.position.y = 0;
       visual.traverse(node => {

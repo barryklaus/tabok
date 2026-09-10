@@ -252,6 +252,8 @@ test('Awakened Judges removes equipment and uses one private turn ritual',()=>{
  assert.match(board,/makeJudgeModel\(index = 0, active = false\)/);
  assert.match(html,/const JUDGE_SITES=\['-3,17','3,14','6,8','3,5','-3,8','-6,14'\]/);
  assert.match(board,/const JUDGE_SITES = \['-3,17','3,14','6,8','3,5','-3,8','-6,14'\]/);
+ assert.match(board,/judge\.scale\.setScalar\(\.86\)/);
+ assert.match(board,/major \? \.36 : \.86/);
  assert.match(board,/actor\.statue \|\| 0/);
  assert.match(board,/continuousJudge \? t/);
  assert.match(board,/node\.castShadow=false;node\.receiveShadow=false/);
