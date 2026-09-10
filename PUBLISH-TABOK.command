@@ -29,5 +29,8 @@ fi
 if ! "$git_bin" diff --cached --quiet; then
   "$git_bin" commit -m "${1:-Publish TABOK update $(date '+%Y-%m-%d %H:%M')}"
 fi
-"$git_bin" push origin HEAD:main
+if ! "$git_bin" push origin HEAD:main; then
+  printf '\nThe tested update is committed locally.\nOpen GitHub Desktop, select tabok, and click Push origin to use its saved sign-in.\n'
+  exit 1
+fi
 printf '\nPublished to GitHub. Pages will deploy shortly:\nhttps://barryklaus.github.io/tabok/\n'

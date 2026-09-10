@@ -12,7 +12,7 @@ Version: **v1.3.1 — The Six Guardians · 2026.09.10.G1**
 
 ### Fast publishing
 
-Double-click `PUBLISH-TABOK.command` in the repository, or run `./PUBLISH-TABOK.command "Describe this update"`. It runs the tests, checks that GitHub has no newer commits, commits tracked changes, and pushes to the existing main branch. GitHub Pages then deploys automatically. New files must be staged first; the shortcut never force-pushes. Requires an existing GitHub sign-in plus Git and Node.js (the installed Codex runtime is also supported).
+Double-click `PUBLISH-TABOK.command` in the repository, or run `./PUBLISH-TABOK.command "Describe this update"`. It runs the tests, checks that GitHub has no newer commits, commits tracked changes, and pushes to the existing main branch. GitHub Pages then deploys automatically. New files must be staged first; the shortcut never force-pushes. Requires Git and Node.js (the installed Codex runtime is also supported). If command-line Git has no saved sign-in, the tested commit remains ready: open GitHub Desktop and click **Push origin** to publish using its existing sign-in.
 
 ### Guardian verification
 
