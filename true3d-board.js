@@ -1428,7 +1428,6 @@ export class TabokTrue3DBoard {
   activateJudge(id) {
     const actor=this.actors.get(id),visual=actor?.userData.visual3D;if(!actor||!visual)return;
     visual.userData.activationUntil=performance.now()+1500;
-    this.focusOn(id);
   }
 
 

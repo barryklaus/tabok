@@ -296,3 +296,24 @@ test('Mobile Anchor prevents Safari eviction, rejoins guests and restores full C
  assert.match(board,/this\.portalDebrisMesh\.count = quality === 'full' \|\| quality === 'auto'/);
  assert.match(board,/webglcontextlost/);
 });
+
+test('Flexible Offering combines rituals, permits discard and keeps monster travel continuous',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const css=fs.readFileSync(path.join(root,'celestial-ui.css'),'utf8');
+ const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
+ const network=fs.readFileSync(path.join(root,'multiplayer.js'),'utf8');
+ assert.match(html,/data-turn-type="NORMAL_OFFER"/);
+ assert.match(html,/data-turn-type="RUNE_OFFER"/);
+ assert.match(html,/function beginOfferPhase\(\)/);
+ assert.match(html,/data-offer-discard="1"/);
+ assert.match(html,/animateTreasureTransfer\(discard\?'DISCARD':'GIVE'/);
+ assert.match(html,/if\(turn\.withOffer\)\{beginOfferPhase\(\);return\}/);
+ assert.match(html,/function planMonsterGlide/);
+ assert.match(html,/await animateActor\(m\.id,from,final/);
+ assert.match(html,/class="roll-guidance hidden"/);
+ assert.match(css,/Flexible Offering/);
+ const activation=board.match(/activateJudge\(id\) \{([\s\S]*?)\n  \}/)?.[1]||'';
+ assert.doesNotMatch(activation,/focusOn/);
+ assert.match(network,/offerDiscard/);
+ assert.match(network,/guidance:\{className:els\.guidance\.className/);
+});

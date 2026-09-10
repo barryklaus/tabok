@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v1.1.0 Awakened Judges · B1';
+  const VERSION = 'v1.2.0 Flexible Offering · C1';
   const TOKEN_KEY = 'tabok-multiplayer-token';
   const NAME_KEY = 'tabok-multiplayer-name';
   const ACTIVE_ROOM_KEY = 'tabok-active-guest-room';
@@ -658,7 +658,7 @@
 
   function captureUI() {
     return {
-      eye:els.eye.textContent,title:els.title.textContent,instruction:els.instruction.textContent,dice:els.dice.innerHTML,controls:els.controls.innerHTML,event:els.event.textContent,portalState:els.portal.querySelector('.eclipse-well')?.dataset.state||'idle',actionDecision:{className:els.actionDecision.className,body:els.actionDecisionBody.innerHTML,kicker:els.actionDecision.querySelector('.action-decision-kicker').textContent},
+      eye:els.eye.textContent,title:els.title.textContent,instruction:els.instruction.textContent,dice:els.dice.innerHTML,guidance:{className:els.guidance.className,html:els.guidance.innerHTML},controls:els.controls.innerHTML,event:els.event.textContent,portalState:els.portal.querySelector('.eclipse-well')?.dataset.state||'idle',actionDecision:{className:els.actionDecision.className,body:els.actionDecisionBody.innerHTML,kicker:els.actionDecision.querySelector('.action-decision-kicker').textContent},
       turnRoll:{className:els.turnRoll.className,style:els.turnRoll.getAttribute('style')||'',portraitStyle:els.turnRollPortrait.getAttribute('style')||'',kicker:els.turnRollKicker.textContent,name:els.turnRollName.textContent,role:els.turnRollRole.textContent,status:els.turnRollStatus.textContent,dice:els.turnRollDice.innerHTML,control:els.turnRollControl.innerHTML},
       message:{className:els.message.className,eye:els.messageEye.textContent,title:els.messageTitle.textContent,body:els.messageBody.innerHTML,continueText:els.messageContinue.textContent,continueHidden:els.messageContinue.hidden,input:document.getElementById('lastBreathInput')?.value || ''}
     };
@@ -666,7 +666,7 @@
   function applyUI(ui) {
     if (isHost || !ui || !game) return;
     applyingRemote = true;
-    els.eye.textContent=ui.eye; els.title.textContent=ui.title; els.instruction.textContent=ui.instruction; els.dice.innerHTML=ui.dice; els.controls.innerHTML=ui.controls; els.event.textContent=ui.event; const portalState=ui.portalState||'idle',portal=els.portal.querySelector('.eclipse-well'); if(portal) portal.dataset.state=portalState; webglBoard?.setPortalState(portalState);
+    els.eye.textContent=ui.eye; els.title.textContent=ui.title; els.instruction.textContent=ui.instruction; els.dice.innerHTML=ui.dice; if(ui.guidance){els.guidance.className=ui.guidance.className;els.guidance.innerHTML=ui.guidance.html} els.controls.innerHTML=ui.controls; els.event.textContent=ui.event; const portalState=ui.portalState||'idle',portal=els.portal.querySelector('.eclipse-well'); if(portal) portal.dataset.state=portalState; webglBoard?.setPortalState(portalState);
     if(ui.turnRoll){els.turnRoll.className=ui.turnRoll.className;els.turnRoll.setAttribute('style',ui.turnRoll.style);els.turnRollPortrait.setAttribute('style',ui.turnRoll.portraitStyle);els.turnRollKicker.textContent=ui.turnRoll.kicker;els.turnRollName.textContent=ui.turnRoll.name;els.turnRollRole.textContent=ui.turnRoll.role;els.turnRollStatus.textContent=ui.turnRoll.status;els.turnRollDice.innerHTML=ui.turnRoll.dice;els.turnRollControl.innerHTML=ui.turnRoll.control;els.turnRoll.classList.toggle('hidden',!localCanViewTurnRoll());if(!localCanViewTurnRoll())dice3D?.hide()}
     if(ui.actionDecision){els.actionDecision.className=ui.actionDecision.className;els.actionDecisionBody.innerHTML=ui.actionDecision.body;els.actionDecision.querySelector('.action-decision-kicker').textContent=ui.actionDecision.kicker}
     els.message.className=ui.message.className; els.messageEye.textContent=ui.message.eye; els.messageTitle.textContent=ui.message.title; els.messageBody.innerHTML=ui.message.body; els.messageContinue.textContent=ui.message.continueText; els.messageContinue.hidden=ui.message.continueHidden;
@@ -677,7 +677,7 @@
   function broadcastUI() { if(isHost&&room?.phase==='game')broadcast({type:'ui',ui:captureUI()}); }
   function installHostObservers() {
     const observer = new MutationObserver(() => queueUI());
-    [els.dice,els.controls,els.instruction,els.event,els.turnRoll,els.actionDecision,els.message,els.portal].filter(Boolean).forEach(node => observer.observe(node,{subtree:true,childList:true,attributes:true,characterData:true}));
+    [els.dice,els.guidance,els.controls,els.instruction,els.event,els.turnRoll,els.actionDecision,els.message,els.portal].filter(Boolean).forEach(node => observer.observe(node,{subtree:true,childList:true,attributes:true,characterData:true}));
   }
 
   function localOwnsSlot(slot) { return seatForSlot(slot)?.owner === token; }
@@ -729,7 +729,7 @@
     if(target.closest('.portal-target'))return{kind:'portal'};
     const button=target.closest('button'); if(!button)return null;
     if(button.id)return{kind:'button',id:button.id,scope:button.closest('#messageOverlay')?'message':'game'};
-    const dataKeys=['turnType','groupAnswer','answerIndex','trivia','replace','runePower','runeTarget','plunderAdd','plunderRemove','plunderBack','plunderConfirm'];
+    const dataKeys=['turnType','offerType','offerTarget','offerDiscard','groupAnswer','answerIndex','trivia','replace','runePower','runeTarget','plunderAdd','plunderRemove','plunderBack','plunderConfirm'];
     const data={}; dataKeys.forEach(key=>{if(button.dataset[key]!==undefined)data[key]=button.dataset[key]});
     return{kind:'button',data,aria:button.getAttribute('aria-label')||'',text:button.textContent.trim().replace(/\s+/g,' '),scope:button.closest('#messageOverlay')?'message':'game'};
   }
@@ -739,7 +739,7 @@
     const root=command.scope==='message'?els.message:document;
     if(command.id)return root.querySelector('#'+cssEscape(command.id));
     const entries=Object.entries(command.data||{});
-    if(entries.length){const [key,value]=entries[0],attr='data-'+key.replace(/[A-Z]/g,m=>'-'+m.toLowerCase());return root.querySelector('button['+attr+'="'+cssEscape(value)+'"]')}
+    if(entries.length){const selector=entries.map(([key,value])=>'[data-'+key.replace(/[A-Z]/g,m=>'-'+m.toLowerCase())+'="'+cssEscape(value)+'"]').join('');return root.querySelector('button'+selector)}
     const buttons=[...root.querySelectorAll('button')];
     return buttons.find(b=>(command.aria&&b.getAttribute('aria-label')===command.aria)||b.textContent.trim().replace(/\s+/g,' ')===command.text);
   }

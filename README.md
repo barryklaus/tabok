@@ -1,6 +1,14 @@
 # TABOK — The Crossing
 
-Version: **v1.1.1 — Awakened Judges · 2026.09.10.B2**
+Version: **v1.2.0 — Flexible Offering · 2026.09.10.C1**
+
+## v1.2.0 — Flexible Offering
+
+- OFFER can be cast alone, added to Normal, or added to Rune; combined Offerings resolve after movement and Rune effects.
+- Each required treasure can go to any active Traveler or be cast away into the Portal.
+- Rolled dice now leave a concise contextual explanation of movement, treasure, Rune power, and Offering choices.
+- Awakened Judges and the Major Monster travel to their final hex in one uninterrupted glide without taking control of the camera.
+- Multiplayer now synchronizes the new Offering targets, discard choice, and roll guidance precisely.
 
 ## v1.1.1 — Statue Scale Restoration
 
