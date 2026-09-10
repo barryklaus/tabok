@@ -429,6 +429,7 @@ export class TabokTrue3DBoard {
     this.makeGround();
     this.cosmicSanctuary = createCosmicSanctuary(this.scene, this.ruinStoneMaps.G);
     this.makeBoard();
+    this.makeDormantJudges();
     this.makePortal();
     this.scene.add(this.itemRoot, this.actorRoot, this.occupancyRoot, this.highlightRoot, this.effectRoot);
     this.bindInput();
@@ -567,6 +568,28 @@ export class TabokTrue3DBoard {
     });
     this.faultlinePlane.renderOrder = 1;
     this.scene.add(this.faultlinePlane);
+  }
+
+  makeDormantJudges() {
+    this.dormantJudgeRoot=new THREE.Group();this.dormantJudgeRoot.name='The Six — dormant judges';this.scene.add(this.dormantJudgeRoot);
+    this.dormantJudges=[];
+    const stone=new THREE.MeshStandardMaterial({color:0x302936,roughness:.94,metalness:.04,emissive:0x16091f,emissiveIntensity:.16});
+    const crack=new THREE.MeshBasicMaterial({color:0x7d3b9b,transparent:true,opacity:.34});
+    for(let index=0;index<6;index++){
+      const angle=index*Math.PI/3,radius=6.35,judge=new THREE.Group();judge.name='Dormant Judge '+(index+1);
+      const body=new THREE.Mesh(index%2?new THREE.CylinderGeometry(.32+.04*(index%3),.56,1.62,5+index%3):new THREE.ConeGeometry(.62,1.75,5+index%2),stone);
+      body.position.y=1.05;body.rotation.y=index*.71;judge.add(body);
+      const headGeometry=index===0?new THREE.ConeGeometry(.34,.72,4):index===1?new THREE.SphereGeometry(.34,7,5):index===2?new THREE.BoxGeometry(.5,.62,.4):index===3?new THREE.CylinderGeometry(.24,.39,.68,6):index===4?new THREE.TetrahedronGeometry(.43):new THREE.OctahedronGeometry(.39);
+      const head=new THREE.Mesh(headGeometry,stone);head.position.y=2.12;head.rotation.set(index*.08,index*.43,index===4?.22:0);judge.add(head);
+      const limbGeometry=new THREE.CylinderGeometry(.09,.13,1.38,5);for(let side=-1;side<=1;side+=2){const limb=new THREE.Mesh(limbGeometry,stone);limb.position.set(side*(.48+index*.025),1.05+(index%2)*.18,0);limb.rotation.z=side*(.22+index*.055);judge.add(limb)}
+      const halo=new THREE.Mesh(new THREE.TorusGeometry(.5+index*.035,.025,5,18),crack.clone());halo.position.y=2.2;halo.rotation.x=Math.PI/2+(index%2)*.35;judge.add(halo);
+      judge.position.set(Math.sin(angle)*radius,.11,Math.cos(angle)*radius);judge.rotation.y=Math.atan2(-judge.position.x,-judge.position.z);judge.scale.setScalar(.86);judge.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true}});this.dormantJudgeRoot.add(judge);this.dormantJudges.push(judge)
+    }
+  }
+
+  syncDormantJudges(remaining=6) {
+    const awakened=6-Math.max(0,Math.min(6,Number(remaining)||0));
+    this.dormantJudges?.forEach((judge,index)=>{judge.visible=index>=awakened});
   }
 
   makeBoard() {
@@ -1192,6 +1215,7 @@ export class TabokTrue3DBoard {
     if (signature === this.stateSignature) return;
     this.stateSignature = signature;
     this.majorPresent = state.monsters.some(monster => monster.major);
+    this.syncDormantJudges(state.dormantJudges);
     const actors = [
       ...state.players.map(player => ({ ...player, kind: 'player' })),
       ...state.monsters.map(monster => ({ ...monster, kind: 'monster' }))

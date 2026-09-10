@@ -401,3 +401,15 @@ select,input,textarea{
   .rune-claim-core{grid-template-columns:48px 1fr!important;gap:12px!important;padding:14px 18px!important}.rune-claim-die{width:46px!important}.rune-claim-copy{font-size:19px!important}
   .character-bust-stage{min-height:180px}.character-preview .preview-caption{bottom:5px!important}
 }
+/* Major Update #1 — The Balance */
+.turn-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(7px,1.1vw,14px);width:100%}
+.turn-choice-grid button{min-height:76px;border:1px solid rgba(194,151,82,.58);clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px);background:rgba(8,6,7,.78);color:#d9ba82;text-transform:uppercase;letter-spacing:.13em}
+.turn-choice-grid button:hover:not(:disabled){border-color:#f0cf8a;box-shadow:inset 0 0 28px rgba(179,126,52,.13),0 0 18px rgba(205,154,73,.1)}
+.turn-choice-grid button b,.turn-choice-grid button small{display:block}.turn-choice-grid button b{font:600 15px Georgia,serif;letter-spacing:.2em}.turn-choice-grid button small{margin-top:8px;color:#8f816d;font-size:8px;line-height:1.45}.turn-choice-grid button:disabled{opacity:.34}
+.balance-riddle,.balance-judgment{text-align:center;padding:clamp(14px,3vw,34px)}
+.balance-riddle small,.balance-judgment small{color:#9d8868;text-transform:uppercase;letter-spacing:.34em;font-size:8px}
+.balance-riddle blockquote,.balance-judgment blockquote{margin:24px auto;color:#ead5ae;font:italic clamp(19px,3.4vw,34px)/1.55 Georgia,serif;letter-spacing:.055em}
+.balance-riddle p,.balance-judgment p{max-width:42ch;margin:18px auto;color:#9b8c78;line-height:1.7}
+.balance-judgment strong{display:block;margin:20px 0;color:#e6c47f;font:500 clamp(28px,5vw,52px) Georgia,serif;letter-spacing:.22em}.balance-judgment.rejected strong{color:#d8858f}
+.balance-trial{text-align:center}.balance-trial>p{min-height:46px;color:#d7c29e}.trial-target{display:grid;place-items:center;width:112px;height:112px;margin:20px auto;border:1px solid #c69b5c;border-radius:50%;background:rgba(12,7,10,.8);color:#ead39e;font:700 15px Georgia,serif;letter-spacing:.12em;transition:filter .14s,transform .14s}.trial-target:not(:disabled){box-shadow:0 0 30px rgba(212,159,80,.35);transform:scale(1.04)}.trial-target.correct{color:#9be5bc;border-color:#78c49b}.trial-target.wrong{color:#ef8994;border-color:#d85f6b}
+@media(max-width:700px){.turn-choice-grid{grid-template-columns:1fr}.turn-choice-grid button{min-height:58px}.balance-riddle blockquote,.balance-judgment blockquote{font-size:20px}}

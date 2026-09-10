@@ -1,6 +1,22 @@
-# TABOK — True 3D Board Alpha
+# TABOK — The Crossing
 
-Version: **v0.66.0 — Render Discipline · 2026.09.09.I1**
+Version: **v1.0.0 — The Balance · 2026.09.10.A1**
+
+## v1.0.0 — The Balance
+
+- Introduces the canonical three-turn structure: Normal, Rune, or Offer.
+- Replaces recipe cards with the hidden Balance law for Portal judgment.
+- Adds four fixed Rune families, D20 Offer transfers, four Hearts, and Last Chance.
+- Places six dormant Judges around the board; rejection awakens them, and the
+  seventh awakening summons the Major Monster immediately.
+- Reworks the Monster Phase with canonical movement/chaos dice, Network
+  attacks, Fireball lanes, and Trial-or-Die encounters.
+- Keeps the existing True 3D board, characters, effects, multiplayer rooms,
+  mobile layout, accessibility, and performance profiles.
+
+The previous release remains available separately in the original `tabok-3d`
+repository. This repository is the dedicated gameplay migration for **The
+Balance, Game Logic v3.2**.
 
 ## v0.66.0 — Render Discipline
 

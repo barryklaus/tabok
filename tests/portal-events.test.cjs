@@ -76,24 +76,22 @@ test('only host broadcasts; the guest receives the explicit event once through t
 test('rejected or crossed actors are emitted before their rule-state changes',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  assert.match(html,/function cross\(p,source\)\{[^\n]*emitPortalVisual\('crossing'[\s\S]*?p.status='crossed'/);
- assert.match(html,/function reject\(p\)\{emitPortalVisual\('rejection',p,p.start\);p.pos=p.start/);
+ assert.match(html,/function reject\(p\)\{[^\n]*emitPortalVisual\('rejection',p,destination\);p.pos=destination/);
  assert.match(html,/function kill\(p,events\)\{emitPortalVisual\('death',p,p.pos\);p.status='dead'/);
  assert.ok(!html.includes('webglBoard?.portalExit'));
 });
 
-test('Rift Hunt rules use four Hearts, x2 Minors, fourth-rejection Major and bounded Rage',()=>{
+test('The Balance uses four Hearts, The Six and canonical Monster dice',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  assert.match(html,/inventory:\[0,0,0\],life:4,/);
- assert.match(html,/monster=\{id:'M'\+n,pos:open,moveMultiplier:2/);
- assert.match(html,/else if\(n===4\).*summonMajorMonster/);
- assert.match(html,/monster\.rage=Math\.min\(4,n-4\)/);
- assert.match(html,/MINOR_ACTION=\['ATTACK','ATTACK','ATTACK','POUNCE','POUNCE','POUNCE'\]/);
- assert.match(html,/applyDamage\(traveler,2,m\.id\+' direct Rift Pounce'/);
- assert.match(html,/applyDamage\(impact\.target,2,'Major Fireball '/);
- assert.ok(!html.includes('Color Attack'));
+ assert.match(html,/dormantJudges:6/);
+ assert.match(html,/game\.dormantJudges===0&&!game\.seventhAwake/);
+ assert.match(html,/BALANCE\.minorMonsterRoll/);
+ assert.match(html,/BALANCE\.majorMonsterRoll/);
+ assert.match(html,/resolveLastChance/);
 });
 
-test('Living Diorama stages idles, portal cards, Pounce concealment and rejection flailing',()=>{
+test('Living Diorama retains idles and stages The Balance reveal',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const travelers=fs.readFileSync(path.join(root,'sculpted-travelers.js'),'utf8');
  const monsters=fs.readFileSync(path.join(root,'sculpted-monsters.js'),'utf8');
@@ -104,10 +102,9 @@ test('Living Diorama stages idles, portal cards, Pounce concealment and rejectio
  assert.match(monsters,/idleBehaviorCount=24/);
  assert.match(cinematics,/event\.type === 'rejection' \? 'blast'/);
  assert.match(cinematics,/actor\.visible=u<\.36\|\|u>=\.58/);
- assert.match(html,/data-final=/);
- assert.match(html,/820\+index\*1380/);
- assert.match(html,/Math\.pow\(progress,3\.8\)\*330/);
- assert.match(html,/p\.name\+' finds a path'/);
+ assert.match(html,/function showCrossingIntro\(\)/);
+ assert.match(html,/What differs must weigh the same/);
+ assert.match(html,/The Balance measures burden, not abundance/);
 });
 
 test('Grounded Legends removes plinths, faces travel and shares character speech',()=>{
@@ -133,18 +130,20 @@ test('Grounded Legends removes plinths, faces travel and shares character speech
  assert.match(html,/journeyLength:route\.length/);
 });
 
-test('Decision Altar synchronizes choices, actor clicks and Sovereign execution',()=>{
+test('Decision Altar exposes canonical turn and Offer choices',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const multiplayer=fs.readFileSync(path.join(root,'multiplayer.js'),'utf8');
  const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
  const monsters=fs.readFileSync(path.join(root,'sculpted-monsters.js'),'utf8');
  const cinematics=fs.readFileSync(path.join(root,'portal-cinematics.js'),'utf8');
  assert.match(html,/id="actionDecisionOverlay"/);
- assert.match(html,/Automate treasure actions/);
+ assert.match(html,/data-turn-type="NORMAL"/);
+ assert.match(html,/data-turn-type="RUNE"/);
+ assert.match(html,/data-turn-type="OFFER"/);
  assert.match(html,/window\.TabokSelect3DActor=select3DActor/);
  assert.match(html,/actor-tooltip-health/);
  assert.match(multiplayer,/window\.TabokRoute3DActor=route3DActor/);
- assert.match(multiplayer,/autoTreasureActions/);
+ assert.match(multiplayer,/offerTargetMode/);
  assert.match(board,/playMajorKill\(targetId/);
  assert.match(monsters,/execution=mode==='kill'/);
  assert.match(cinematics,/summonSpin=major&&!this\.reduced/);
@@ -161,7 +160,7 @@ test('Free Camera uses left orbit and right pan without click-to-focus',()=>{
  assert.match(html,/Left-drag to orbit · Right-drag to move/);
 });
 
-test('Correction pass adds heart feedback, Major reroll and delayed carried verdict',()=>{
+test('Correction pass keeps heart feedback and replaces old card verdicts',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
  const cinematics=fs.readFileSync(path.join(root,'portal-cinematics.js'),'utf8');
@@ -169,11 +168,9 @@ test('Correction pass adds heart feedback, Major reroll and delayed carried verd
  assert.match(board,/return new THREE\.Vector3\([^;]+, \.11,/);
  assert.match(board,/damageFeedback\(id, hearts = 1\)/);
  assert.match(html,/webglBoard\?\.damageFeedback\?\.\(p\.p,left\)/);
- assert.match(html,/MAJOR_MODE=\[[^\]]+'EXTRA TURN'\]/);
- assert.match(html,/monsterTurns\.push\(m\)/);
- assert.match(html,/rolls all three dice again/);
- assert.match(html,/function portalVerdict\(p,traveler,matches\)/);
- assert.match(html,/cardHTML\(q\.cards,false\)\+'<div class="result">[^<]+<\/div>'\+portalVerdict/);
+ assert.match(html,/BALANCE\.crossingProbability\(p\.inventory\)/);
+ assert.match(html,/BALANCE\.portalAwakeningCount/);
+ assert.match(html,/function resolveBalanceTrial/);
  assert.match(css,/\.portal-verdict\.match/);
  assert.match(css,/\.actor-speech-bubble\.heart-loss/);
  assert.match(cinematics,/event\.type==='crossing'\?4200:3950/);
@@ -199,21 +196,12 @@ test('Starpath removes replay, resolves automation authoritatively, shortens Por
  assert.match(cosmic,/LinearMipmapLinearFilter/);
 });
 
-test('automatic Grand Plunder releases the post-movement treasure resolver',async()=>{
+test('Normal turn resolves Treasure after movement and before Portal',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
- const source=['queueAutomatedTreasureAction','queueAutomatedPlunder','finishMovement'].map(name=>html.split('\n').find(line=>line.includes('function '+name+'('))?.trim()).join('\n');
- assert.ok(!source.includes('undefined'),'automation functions must remain available to the engine');
- const turn={runePower:'PLUNDER',autoResolveState:'running'},player={inventory:[0,0,0]},target={inventory:[1,0,0]};
- const c={game:{phase:'rune',turn},actionAutoTimer:null,busy:false,plunderRuns:0,actionRuns:0,setTimeout,clearTimeout,
-  timing:()=>0,automationAuthority:()=>true,active:()=>player,runePlunderTargets:()=>[target],plunderRequired:()=>1,
-  chooseCPUPlunder:()=>[0],resolveRunePlunder:()=>{c.plunderRuns++},finishRunePower(){},clearLegal(){},renderAll(){},cpuAction(){c.actionRuns++}};
- vm.createContext(c);vm.runInContext(source,c);
- vm.runInContext('queueAutomatedPlunder()',c);await new Promise(resolve=>setTimeout(resolve,10));
- assert.equal(c.plunderRuns,1);assert.equal(turn.autoPlunderResolveState,'running');
- await vm.runInContext('finishMovement()',c);
- assert.equal(c.game.phase,'action');assert.equal(turn.autoPlunderResolveState,undefined);assert.equal(turn.autoResolveState,undefined);
- vm.runInContext('queueAutomatedTreasureAction()',c);await new Promise(resolve=>setTimeout(resolve,10));
- assert.equal(c.actionRuns,1);assert.equal(turn.autoActionResolveState,'running');
+ const finish=html.match(/async function finishMovement\(\)\{([^\n]+)\}/)?.[1]||'';
+ assert.ok(finish.indexOf("turn.type==='NORMAL'")<finish.indexOf('if(turn.portal)resolvePortal'));
+ assert.match(finish,/p\.inventory\[index\]\+\+/);
+ assert.doesNotMatch(finish,/game\.phase='action'/);
 });
 
 test('Render Discipline reuses dice resources and removes invisible competing GPU work',()=>{
@@ -242,7 +230,7 @@ test('Gilded Fate uses reference-matched treasure art and engraved symbol dice',
   assert.match(html,new RegExp(asset.replaceAll('.','\\.')));
   assert.ok(fs.existsSync(path.join(root,asset)),`${name} production icon must exist`);
  }
- assert.match(html,/true3d-dice\.js\?v=20260909I1/);
+ assert.match(html,/true3d-dice\.js\?v=20260910A1/);
  assert.match(dice,/Celestial face plate/);
  assert.match(dice,/new Path2D\('M86 28H426/);
  assert.match(dice,/context\.fillText\(String\(value\),256,264\)/);
