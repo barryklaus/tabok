@@ -1,6 +1,13 @@
 # TABOK — The Crossing
 
-Version: **v1.3.2 — Guardians & Gilded Dice · 2026.09.10.G2**
+Version: **v1.3.3 — Sanctuary Light · 2026.09.10.L1**
+
+## v1.3.3 — Sanctuary Light
+
+- Matches the supplied arena reference with subdued violet moonlight, deep shadow between local light sources, warmer torch spill, and a stronger purple Portal pool.
+- Travelers carry a thin luminous hex outline, soft colored ground falloff, real uplight on their models, and subtle rising sparks. Their lights follow animated movement and respect Portal cinematic visibility.
+- Keeps all six torches lit on desktop High Fidelity and Cinematic, with the existing reduced torch budget on mobile and performance settings. Player lighting adds no shadow passes; sparks are hidden in Performance, Battery saver, and reduced-motion mode.
+- Stone tops catch more localized highlights while retaining the original colored routes, geometry, game rules, and multiplayer protocol.
 
 ## v1.3.2 — Guardians & Gilded Dice
 

@@ -7,6 +7,8 @@ import { createMonsterPilot } from './monster-3d-models.js?v=20260908A1';
 import { PortalCinematics } from './portal-cinematics.js?v=20260908A1';
 import { makeRuinStoneMaps, makeWornHexGeometry, makeRuinFoundation, makeContactShadow } from './ruin-board-art.js?v=20260909H2';
 
+import { ARENA_LIGHTING, makeLightPool, makePlayerAura } from './arena-lighting.js?v=20260910L1';
+
 const SQRT3 = Math.sqrt(3);
 const HEX_RADIUS = .72;
 const PORTAL_R = 2.08;
@@ -16,10 +18,10 @@ const COLORS = { P: 0xa979c4, T: 0x55a8a0, G: 0xb1aa9c, B: 0x211d19, W: 0xe0c68e
 const TILE_TINTS = { P: 0xffffff, T: 0xffffff, G: 0xddd8d0, B: 0xc4bfb6, W: 0xffffff };
 const TILE_SIDES = { P: 0x716779, T: 0x5a7375, G: 0x77736c, B: 0x4a4542, W: 0xa29372 };
 const PORTAL_LOOKS = {
-  idle: [23, 1, new THREE.Color(0x53129a), new THREE.Color(0xd44dff)],
-  rejected: [34, 1.28, new THREE.Color(0x8f174f), new THREE.Color(0xff4fb7)],
-  reckoning: [43, 1.58, new THREE.Color(0x76112b), new THREE.Color(0xff326e)],
-  crossing: [38, 1.42, new THREE.Color(0x176aaa), new THREE.Color(0x70f6ff)]
+  idle: [38, 1, new THREE.Color(0x53129a), new THREE.Color(0xd44dff)],
+  rejected: [46, 1.28, new THREE.Color(0x8f174f), new THREE.Color(0xff4fb7)],
+  reckoning: [56, 1.58, new THREE.Color(0x76112b), new THREE.Color(0xff326e)],
+  crossing: [50, 1.42, new THREE.Color(0x176aaa), new THREE.Color(0x70f6ff)]
 };
 const PLAYER_ART = {
   misty: 'assets/traveler-0-0.png', cliff: 'assets/traveler-1-0.png',
@@ -363,7 +365,7 @@ export class TabokTrue3DBoard {
     this.renderer.setPixelRatio(this.renderRatio);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.34;
+    this.renderer.toneMappingExposure = ARENA_LIGHTING.exposure;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     // Nearly every shadow caster is fixed architecture. Render its depth map
@@ -480,13 +482,13 @@ export class TabokTrue3DBoard {
   }
 
   makeLights() {
-    this.hemisphereLight = new THREE.HemisphereLight(0x877ba8, 0x160b08, .78);
+    this.hemisphereLight = new THREE.HemisphereLight(0x877ba8, 0x160b08, ARENA_LIGHTING.hemisphere);
     this.scene.add(this.hemisphereLight);
 
-    this.ambientLight = new THREE.AmbientLight(0x21101f, .16);
+    this.ambientLight = new THREE.AmbientLight(0x21101f, ARENA_LIGHTING.ambient);
     this.scene.add(this.ambientLight);
 
-    this.moonLight = new THREE.DirectionalLight(0xd8d0ff, 4.25);
+    this.moonLight = new THREE.DirectionalLight(0xd8d0ff, ARENA_LIGHTING.moon);
     this.moonLight.position.set(-9, 18, 10);
     this.moonLight.castShadow = true;
     // A 1024 map is indistinguishable at the board camera distance but costs a
@@ -498,7 +500,7 @@ export class TabokTrue3DBoard {
     this.moonLight.shadow.normalBias = .035;
     this.scene.add(this.moonLight);
 
-    this.rimLight = new THREE.DirectionalLight(0x6f3696, 2.05);
+    this.rimLight = new THREE.DirectionalLight(0x6f3696, ARENA_LIGHTING.rim);
     this.rimLight.position.set(11, 8, -13);
     this.scene.add(this.rimLight);
 
@@ -521,9 +523,9 @@ export class TabokTrue3DBoard {
       const bowl = new THREE.Mesh(bowlGeometry, torchMaterial);
       bowl.position.set(x, 1.34, z);
       this.scene.add(stand, bowl);
-      const light = new THREE.PointLight(i % 2 ? 0xffb35a : 0xff7d2d, 30, 7.8, 2);
+      const light = new THREE.PointLight(i % 2 ? 0xffb35a : 0xff7d2d, ARENA_LIGHTING.torch, 8.5, 2);
       light.position.set(x, 1.52, z);
-      light.userData.baseIntensity = 30;
+      light.userData.baseIntensity = ARENA_LIGHTING.torch;
       light.userData.phase = i * 1.73;
       const flame = new THREE.Mesh(
         flameGeometry,
@@ -598,7 +600,7 @@ export class TabokTrue3DBoard {
       const maps = this.ruinStoneMaps[type];
       topMaterials[type] = new THREE.MeshStandardMaterial({
         map: maps.map, bumpMap: maps.bump, bumpScale: .045,
-        color: TILE_TINTS[type], roughness: .91, metalness: .015
+        color: TILE_TINTS[type], roughness: .76, metalness: .06
       });
       sideMaterials[type] = new THREE.MeshStandardMaterial({
         map: this.ruinStoneMaps.G.map, bumpMap: this.ruinStoneMaps.G.bump, bumpScale: .035,
@@ -828,11 +830,14 @@ export class TabokTrue3DBoard {
     this.portalDebrisDummy = new THREE.Object3D();
     this.portal.add(this.portalDebrisMesh);
 
-    this.portalLight = new THREE.PointLight(0xb345ff, 16, 7, 2);
-    this.portalLight.position.y = 1.35;
+    this.portalLight = new THREE.PointLight(0xb345ff, PORTAL_LOOKS.idle[0], 9, 2);
+    this.portalLight.position.y = .95;
     this.portal.add(this.portalLight);
+    this.portalPool = makeLightPool(0xa52aff, 5.2, .36);
+    this.portalPool.position.y = .116;
+    this.portal.add(this.portalPool);
 
-    this.portalSpotlight = new THREE.SpotLight(0xc955ff, 18, 13, Math.PI / 4.5, .72, 1.7);
+    this.portalSpotlight = new THREE.SpotLight(0xc955ff, 28, 13, Math.PI / 4.5, .72, 1.7);
     this.portalSpotlight.position.set(0, 8.5, 0);
     this.portalSpotlight.target.position.set(0, 0, 0);
     this.scene.add(this.portalSpotlight, this.portalSpotlight.target);
@@ -1014,16 +1019,18 @@ export class TabokTrue3DBoard {
     const color = new THREE.Color(actor.kind === 'player' ? actor.color : major ? '#d95cff' : '#ff526d');
     const geometry = new THREE.RingGeometry(radius * .7, radius, 6);
     geometry.rotateX(-Math.PI / 2);
-    const glow = new THREE.Mesh(
+    const glow = actor.kind === 'player' ? makePlayerAura(color) : new THREE.Mesh(
       geometry,
       new THREE.MeshBasicMaterial({
         color, transparent: true, opacity: major ? .34 : .2,
         side: THREE.DoubleSide, depthWrite: false, blending: THREE.NormalBlending
       })
     );
+    if (actor.kind === 'player') geometry.dispose();
     glow.rotation.y = Math.PI / 6;
     glow.position.copy(worldFor(actor.pos));
-    glow.position.y = .125;
+    glow.userData.surfaceOffset = actor.pos === 'PORTAL' ? .38 : .045;
+    glow.position.y += glow.userData.surfaceOffset;
     glow.userData.occupancy = true;
     glow.userData.baseOpacity = major ? .34 : .2;
     glow.userData.phase = actor.id.length * .73 + actor.pos.length * .19;
@@ -1150,7 +1157,8 @@ export class TabokTrue3DBoard {
       glow = this.occupancyGlows.get(actor.id);
     }
     glow.position.copy(worldFor(actor.pos));
-    glow.position.y = .125;
+    glow.userData.surfaceOffset = actor.pos === 'PORTAL' ? .38 : .045;
+    glow.position.y += glow.userData.surfaceOffset;
     glow.visible = !group.userData.cinematicLocks;
   }
 
@@ -1274,7 +1282,7 @@ export class TabokTrue3DBoard {
       this.moonLight.shadow.map = null;
     }
     if (this.faultlineMaterial) this.faultlineMaterial.uniforms.uQuality.value = quality === 'ultra' ? .25 : quality === 'lite' ? .42 : 1;
-    const enabledLights = quality === 'auto' && !mobile ? 6 : quality === 'auto' || quality === 'full' ? 3 : 2;
+    const enabledLights = quality === 'auto' && !mobile ? 6 : quality === 'full' && !mobile ? 6 : quality === 'auto' || quality === 'full' ? 3 : 2;
     this.templeLights.forEach((entry, index) => {
       // Every lantern and glow stays visible; only the costly lights are reduced.
       const enabled = enabledLights === 6 || (enabledLights === 3 ? index % 2 === 0 : index % 3 === 0);
@@ -1521,12 +1529,15 @@ export class TabokTrue3DBoard {
     const majorStorm=cinematicLive&&cinematic.major&&!reducedMotion;
     const stormProgress=cinematicLive?cinematicAge/cinematic.duration:1;
     const flash=majorStorm?Math.max(...[.15,.3,.49].map(at=>Math.max(0,1-Math.abs(stormProgress-at)*65))):0;
-    this.hemisphereLight.intensity=majorStorm ? .12 : .78;this.ambientLight.intensity=majorStorm ? .025 : .16;this.moonLight.intensity=majorStorm?(flash?7.5:.38):4.25;this.rimLight.intensity=majorStorm?(flash?6.5:.35):2.05;
+    this.hemisphereLight.intensity = majorStorm ? .12 : ARENA_LIGHTING.hemisphere;
+    this.ambientLight.intensity = majorStorm ? .025 : ARENA_LIGHTING.ambient;
+    this.moonLight.intensity = majorStorm ? (flash ? 7.5 : .38) : ARENA_LIGHTING.moon;
+    this.rimLight.intensity = majorStorm ? (flash ? 6.5 : .35) : ARENA_LIGHTING.rim;
     const shake=cinematicLive&&!reducedMotion?(majorStorm?flash:Math.max(0,1-cinematicAge/400)):0;
     this.canvas.style.transform=shake?'translate('+(Math.sin(now*.091)*shake*3).toFixed(2)+'px,'+(Math.cos(now*.117)*shake*2).toFixed(2)+'px)':'';
     if(cinematic&&!cinematicLive){this.summonCinematic=null;this.canvas.style.transform=''}
     this.templeLights.forEach(entry => {
-      const flicker = 1 + Math.sin(time * 7.7 + entry.phase) * .055 + Math.sin(time * 13.1 + entry.phase * 1.7) * .026;
+      const flicker = reducedMotion ? 1 : 1 + Math.sin(time * 7.7 + entry.phase) * .055 + Math.sin(time * 13.1 + entry.phase * 1.7) * .026;
       entry.light.intensity = entry.light.userData.baseIntensity * flicker * (majorStorm ? .035 + flash*.55 : 1);
       entry.flame.scale.y = 1 + Math.sin(time * 9.3 + entry.phase) * .16;
       entry.glow.material.opacity = .66 + Math.sin(time * 5.4 + entry.phase) * .11;
@@ -1534,6 +1545,9 @@ export class TabokTrue3DBoard {
     const look = PORTAL_LOOKS[this.portalState] || PORTAL_LOOKS.idle;
     const intensity = look[0] * (.94 + Math.sin(time * 2.15) * .06);
     this.portalLight.intensity += (intensity - this.portalLight.intensity) * .06;
+    this.portalLight.color.lerp(look[3], .04);
+    this.portalPool.material.uniforms.uColor.value.lerp(look[3], .04);
+    this.portalPool.material.uniforms.uOpacity.value = .32 + look[1] * .04;
     this.portalSpotlight.color.lerp(look[3], .04);
     this.portalSpotlight.intensity += (look[0] * .74 - this.portalSpotlight.intensity) * .045;
     this.portalVortexMaterial.uniforms.uTime.value = time;
@@ -1601,6 +1615,16 @@ export class TabokTrue3DBoard {
     });
     this.occupancyRoot.children.forEach(glow => {
       if (!glow.userData.occupancy) return;
+      const actor = this.actors.get(glow.userData.actorId);
+      if (actor && !actor.userData.cinematicLocks) {
+        // Follow the animated position, not the last multiplayer snapshot.
+        glow.position.copy(actor.position);
+        glow.position.y += glow.userData.surfaceOffset;
+      }
+      if (glow.userData.updateAura) {
+        glow.userData.updateAura(time + glow.userData.phase, reducedMotion, this.quality, this.renderRatio);
+        return;
+      }
       const pulse = .88 + Math.sin(time * 2.6 + glow.userData.phase) * .08;
       glow.scale.setScalar(pulse);
       glow.material.opacity = glow.userData.baseOpacity * (.86 + Math.sin(time * 2.6 + glow.userData.phase) * .14);
