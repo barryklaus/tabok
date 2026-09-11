@@ -6,7 +6,7 @@
 </style><script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script></head>
 <body><header><strong>Fractured Sanctuary · Art check</strong><select id="quality" aria-label="Quality"><option value="full">High Fidelity 60</option><option value="auto">Cinematic maximum</option><option value="ultra">Performance</option><option value="lite">Battery saver</option></select><button id="orbit">Orbit view</button><button id="reset">Reset view</button><button id="major">Major escalation</button><button id="awaken">Awaken next guardian</button><button id="walk">Move guardian</button><button id="travelerWalk">Move Traveler</button><output id="stats">Preparing board…</output></header><div id="stage"><canvas id="board" aria-label="Board art preview"></canvas></div><div id="actorTooltip"></div><p id="error" role="alert"></p>
 <script type="module">
-import { TabokTrue3DBoard } from './true3d-board.js?v=20260910L2';
+import { TabokTrue3DBoard } from './true3d-board.js?v=20260911VK1';
 const error = document.getElementById('error');
 window.addEventListener('error', event => error.textContent = event.message);
 window.addEventListener('unhandledrejection', event => error.textContent = String(event.reason));

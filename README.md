@@ -1,6 +1,15 @@
 # TABOK — The Crossing
 
-Version: **v1.5.1 — Last Chance · 2026.09.11.T2**
+Version: **v1.5.2 — The Void Keeper · 2026.09.11.VK1**
+
+## v1.5.2 — The Void Keeper
+
+- Replaces the Major Monster with a fully volumetric Three.js sculpture inspired by the supplied Void Keeper reference: closed obsidian mask, gold crown, fractured armor, articulated claws, torn ivory mantle, and seven floating rune seals.
+- Preserves the existing major actor factory, board scale, levitation, movement, summon and kill hooks, and 24 idle gestures. Rules, trials, dice, and network state are unchanged.
+- Batches static details and instances the rune seals: 72,186 triangles in 68 model draws, with no extra board lights. Texture maps are generated locally and shared; no remote model or texture dependency is required.
+- Updates illustrated fallback portraits and the six-frame summoning sheet using transparent renders of the same sculpture.
+- Opens the [monster gallery](monster-3d-pilot.html) on the Void Keeper, with front/back/side views, rotation, and idle/summon/move/attack controls.
+- Validation: all 48 automated checks; browser checks of all views, mobile framing, action modes, board movement, and major despawn/respawn. Browser checks report no JavaScript or WebGL errors. Frame rate still depends on device and board quality settings.
 
 ## v1.5.1 — Last Chance
 

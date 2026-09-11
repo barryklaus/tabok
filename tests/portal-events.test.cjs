@@ -96,11 +96,12 @@ test('Living Diorama retains idles and stages The Balance reveal',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const travelers=fs.readFileSync(path.join(root,'sculpted-travelers.js'),'utf8');
  const monsters=fs.readFileSync(path.join(root,'sculpted-monsters.js'),'utf8');
+ const major=fs.readFileSync(path.join(root,'void-keeper.js'),'utf8');
  const cinematics=fs.readFileSync(path.join(root,'portal-cinematics.js'),'utf8');
  assert.match(travelers,/idleBehaviorCount=30/);
  assert.match(travelers,/mode==='blast'/);
  assert.match(monsters,/idleBehaviorCount=18/);
- assert.match(monsters,/idleBehaviorCount=24/);
+ assert.match(major,/idleBehaviorCount=24/);
  assert.match(cinematics,/event\.type === 'rejection' \? 'blast'/);
  assert.match(cinematics,/actor\.visible=u<\.36\|\|u>=\.58/);
  assert.match(html,/function showCrossingIntro\(\)/);
@@ -113,6 +114,7 @@ test('Grounded Legends removes plinths, faces travel and shares character speech
  const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
  const travelers=fs.readFileSync(path.join(root,'sculpted-travelers.js'),'utf8');
  const monsters=fs.readFileSync(path.join(root,'sculpted-monsters.js'),'utf8');
+ const major=fs.readFileSync(path.join(root,'void-keeper.js'),'utf8');
  const cinematics=fs.readFileSync(path.join(root,'portal-cinematics.js'),'utf8');
  const actorFactory=board.match(/makeActor\(actor\) \{([\s\S]*?)\n  clearGroup\(/)?.[1]||'';
  const talks=cinematics.match(/const CROSSING_TALKS = \[([\s\S]*?)\];/)?.[1]||'';
@@ -124,7 +126,7 @@ test('Grounded Legends removes plinths, faces travel and shares character speech
  assert.ok(!board.includes("'slide'"));
  assert.match(travelers,/\['move','walk','run','crouch','jump','acro'\]/);
  assert.match(monsters,/mode==='move'\|\|mode==='walk'/);
- assert.match(monsters,/mode==='move'\|\|mode==='levitate'/);
+ assert.match(major,/moving=\['move','walk','levitate'\]\.includes\(mode\)/);
  assert.equal([...talks.matchAll(/'([^']+)'/g)].length,50);
  assert.match(cinematics,/board\.showActorSpeech\?\./);
  assert.match(cinematics,/eventPhrase\(event,event\.type==='crossing'\?CROSSING_TALKS:REJECTION_TALKS\)/);
@@ -136,6 +138,7 @@ test('Decision Altar exposes canonical turn and Offer choices',()=>{
  const multiplayer=fs.readFileSync(path.join(root,'multiplayer.js'),'utf8');
  const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
  const monsters=fs.readFileSync(path.join(root,'sculpted-monsters.js'),'utf8');
+ const major=fs.readFileSync(path.join(root,'void-keeper.js'),'utf8');
  const cinematics=fs.readFileSync(path.join(root,'portal-cinematics.js'),'utf8');
  assert.match(html,/id="actionDecisionOverlay"/);
  assert.match(html,/data-turn-type="NORMAL"/);
@@ -146,7 +149,7 @@ test('Decision Altar exposes canonical turn and Offer choices',()=>{
  assert.match(multiplayer,/window\.TabokRoute3DActor=route3DActor/);
  assert.match(multiplayer,/offerTargetMode/);
  assert.match(board,/playMajorKill\(targetId/);
- assert.match(monsters,/execution=mode==='kill'/);
+ assert.match(major,/attack=mode==='kill'/);
  assert.match(cinematics,/summonSpin=major&&!this\.reduced/);
 });
 

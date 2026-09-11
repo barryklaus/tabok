@@ -3,7 +3,7 @@ import { createGuardianStatue } from './guardian-statues.js?v=20260910L2';
 import { createCosmicSanctuary } from './cosmic-sanctuary.js?v=20260909H1';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createTravelerPilot } from './character-3d-travelers.js?v=20260907G4';
-import { createMonsterPilot } from './monster-3d-models.js?v=20260908A1';
+import { createMonsterPilot } from './monster-3d-models.js?v=20260911VK1';
 import { PortalCinematics } from './portal-cinematics.js?v=20260908A1';
 import { makeRuinStoneMaps, makeWornHexGeometry, makeRuinFoundation, makeContactShadow } from './ruin-board-art.js?v=20260909H2';
 
@@ -1073,7 +1073,7 @@ export class TabokTrue3DBoard {
     } catch (error) {
       console.warn('TABOK 3D actor unavailable; using illustrated fallback.', error);
       if (actor.kind === 'player') visual = this.makeSprite(PLAYER_ART[actor.charId] || PLAYER_ART.misty, 1.18, 1.65);
-      else if (major) visual = this.makeSprite('assets/major-monster-fullbody-v1.png', 1.8, 2.65);
+      else if (major) visual = this.makeSprite('assets/void-keeper-fullbody.png', 1.8, 2.65);
       else visual = this.makeJudgeModel(Math.max(0,(Number(actor.statue)||1)-1),true);
       visual.position.y = 0;
       group.add(visual);

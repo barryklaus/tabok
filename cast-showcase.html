@@ -8,7 +8,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {TRAVELER_3D,createTravelerPilot} from './character-3d-travelers.js?v=20260906S1';
-import {MONSTER_3D,createMonsterPilot} from './monster-3d-models.js?v=20260906S1';
+import {MONSTER_3D,createMonsterPilot} from './monster-3d-models.js?v=20260911VK1';
 const entries={...TRAVELER_3D,...MONSTER_3D},canvas=document.querySelector('canvas'),status=document.querySelector('#status');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x181a1f);scene.fog=new THREE.Fog(0x181a1f,18,40);const camera=new THREE.PerspectiveCamera(32,1,.1,60),controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enablePan=false;controls.minDistance=3.8;controls.maxDistance=14;controls.maxPolarAngle=1.52;
