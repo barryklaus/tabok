@@ -86,8 +86,13 @@ function skull(ctx,p){
 }
 function rune(ctx,label,p){
   ctx.strokeStyle=p.symbol;ctx.fillStyle=p.light;ctx.lineWidth=13;ctx.lineCap='round';ctx.lineJoin='round';
-  if(label==='×2'||label==='×3'){ctx.font='bold 158px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,256,265);return;}
-  if(label==='RIFT'){ctx.beginPath();ctx.ellipse(256,256,63,119,0,0,Math.PI*2);ctx.stroke();path(ctx,[[260,158],[228,221],[277,254],[235,299],[256,354]]);ctx.stroke();}
+  if(label==='×2'||label==='×3'||label==='DOUBLE'){ctx.font='bold 148px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label==='DOUBLE'?'×2':label,256,265);return;}
+  if(label==='WARP'){ctx.beginPath();ctx.arc(256,256,104,0,Math.PI*1.65);ctx.stroke();path(ctx,[[162,214],[151,259],[194,243]]);ctx.stroke();ctx.beginPath();ctx.arc(256,256,48,Math.PI*.2,Math.PI*1.85);ctx.stroke();}
+  else if(label==='PHASE'){ctx.globalAlpha=.9;for(const x of[202,256,310]){ctx.beginPath();ctx.ellipse(x,256,25,105,0,0,Math.PI*2);ctx.stroke();}ctx.globalAlpha=1;}
+  else if(label==='BALANCE'){path(ctx,[[256,137],[256,349]]);ctx.stroke();path(ctx,[[180,188],[332,188]]);ctx.stroke();for(const x of[184,328]){path(ctx,[[x,188],[x-35,267],[x+35,267]],true);ctx.stroke();}}
+  else if(label==='FORTUNE'){star(ctx,256,256,105);ctx.beginPath();ctx.arc(256,256,49,0,Math.PI*2);ctx.stroke();}
+  else if(label==='TIME'){ctx.beginPath();ctx.arc(256,256,105,0,Math.PI*2);ctx.stroke();path(ctx,[[256,256],[256,184],[311,230]]);ctx.stroke();}
+  else if(label==='RIFT'){ctx.beginPath();ctx.ellipse(256,256,63,119,0,0,Math.PI*2);ctx.stroke();path(ctx,[[260,158],[228,221],[277,254],[235,299],[256,354]]);ctx.stroke();}
   else if(label==='SWAP'){for(const side of [-1,1]){ctx.beginPath();ctx.arc(256,256,100,side<0?.1:Math.PI+.1,side<0?Math.PI-.2:Math.PI*2-.2);ctx.stroke();path(ctx,side<0?[[163,296],[156,256],[196,263]]:[[349,216],[356,256],[316,249]]);ctx.stroke();}}
   else if(label==='PLUNDER'){for(let i=0;i<3;i++){const a=i*Math.PI*2/3;const x=256+Math.sin(a)*108,y=256+Math.cos(a)*108;ctx.beginPath();ctx.arc(x,y,18,0,Math.PI*2);ctx.stroke();path(ctx,[[x,y],[256+(x-256)*.25,256+(y-256)*.25]]);ctx.stroke();}star(ctx,256,256,36);}
   else{path(ctx,[[276,129],[185,270],[247,274],[226,383],[327,232],[267,232]],true);ctx.fill();}
@@ -114,6 +119,11 @@ export function faceTexture(label,kind,faceIndex=0){
     // orbiting spheres, and compass pendant. Blank outcomes remain blank.
     const img=treasureImages.get(label);
     if(img){const size=label==='RELIC'?326:312;ctx.drawImage(img,256-size/2,256-size/2,size,size);}
+    else if(label==='CHOOSE'){
+      ctx.save();ctx.translate(256,256);ctx.strokeStyle=ctx.fillStyle=metallic(ctx,p);ctx.lineWidth=8;
+      for(let i=0;i<3;i++){const a=-Math.PI/2+i*Math.PI*2/3,x=Math.cos(a)*92,y=Math.sin(a)*92;ctx.beginPath();ctx.arc(x,y,34,0,Math.PI*2);ctx.stroke();star(ctx,x,y,19);}
+      ctx.beginPath();ctx.arc(0,0,43,0,Math.PI*2);ctx.stroke();star(ctx,0,0,24);ctx.restore();
+    }
   } else if(kind==='Action'){
     if(label==='TAKE')hand(ctx,p,true);else if(label==='GIVE')hand(ctx,p,false);else skull(ctx,p);
   } else rune(ctx,label,p);

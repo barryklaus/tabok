@@ -5,7 +5,9 @@ const rules=require('../balance-rules.js');
 test('The Balance exposes only the three canonical turn choices',()=>{
   assert.deepEqual(Object.values(rules.TURN_TYPES),['NORMAL','RUNE','OFFER']);
   assert.deepEqual(rules.MOVEMENT_D6,[1,2,3,4,5,6]);
-  assert.deepEqual(rules.TREASURE_D6,['RELIC','ODDITY','KEEPSAKE','BLANK','BLANK','BLANK']);
+  assert.deepEqual(rules.TREASURE_D6,['CHOOSE','CHOOSE','CHOOSE','BLANK','BLANK','BLANK']);
+  const simpleRunes=['WARP','DOUBLE','PHASE','BALANCE','FORTUNE','TIME'];
+  Object.values(rules.RUNE_FAMILIES).forEach(faces=>assert.deepEqual(faces,simpleRunes));
 });
 
 test('balanced inventory probabilities follow the canonical burden curve',()=>{
@@ -45,4 +47,3 @@ test('monster dice distinguish multipliers from attacks',()=>{
   assert.deepEqual(rules.majorMonsterRoll(6,'×6'),{movement:6,chaos:'×6',distance:36,fireball:false});
   assert.deepEqual(rules.majorMonsterRoll(2,'FIREBALL'),{movement:2,chaos:'FIREBALL',distance:0,fireball:true});
 });
-

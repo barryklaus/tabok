@@ -1,6 +1,13 @@
 # TABOK — The Crossing
 
-Version: **v1.3.4 — Awakened Candles · 2026.09.10.L2**
+Version: **v1.4.0 — Clear Fate · 2026.09.11.R1**
+
+## v1.4.0 — Clear Fate
+
+- Replaces the mismatched Rune-family effects with one readable six-face system: Warp, Double, Phase, Balance, Fortune, and Time. Every result resolves immediately, with no fragile secondary target-selection state.
+- Keeps treasure acquisition at the same 50% chance, but successful Treasure faces now let the active Traveler deliberately choose Relic, Oddity, or Keepsake after moving.
+- Adds dedicated engraved symbols for all six Rune outcomes and a three-treasure choice sigil to the physical 3D dice.
+- Updates the in-game Rules & Codex, roll guidance, CPU decisions, multiplayer version, and automated rules checks for the simplified flow.
 
 ## v1.3.4 — Awakened Candles
 

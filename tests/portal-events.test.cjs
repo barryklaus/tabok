@@ -197,11 +197,16 @@ test('Starpath removes replay, resolves automation authoritatively, shortens Por
  assert.match(cosmic,/LinearMipmapLinearFilter/);
 });
 
-test('Normal turn resolves Treasure after movement and before Portal',()=>{
+test('Normal turn chooses Treasure after movement and before Portal',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const finish=html.match(/async function finishMovement\(\)\{([^\n]+)\}/)?.[1]||'';
- assert.ok(finish.indexOf("turn.type==='NORMAL'")<finish.indexOf('if(turn.portal)resolvePortal'));
- assert.match(finish,/p\.inventory\[index\]\+\+/);
+ const reward=html.match(/async function chooseTreasureReward\(index\)\{([^\n]+)\}/)?.[1]||'';
+ const continuation=html.match(/function continueAfterTreasure\(\)\{([^\n]+)\}/)?.[1]||'';
+ assert.match(finish,/turn\.treasure==='CHOOSE'/);
+ assert.match(finish,/game\.phase='treasure'/);
+ assert.match(reward,/p\.inventory\[index\]\+\+/);
+ assert.ok(reward.indexOf('p.inventory[index]++')<reward.indexOf('continueAfterTreasure()'));
+ assert.match(continuation,/if\(turn\.portal\)resolvePortal/);
  assert.doesNotMatch(finish,/game\.phase='action'/);
 });
 
@@ -231,7 +236,7 @@ test('Gilded Fate uses reference-matched treasure art and engraved symbol dice',
   assert.match(html,new RegExp(asset.replaceAll('.','\\.')));
   assert.ok(fs.existsSync(path.join(root,asset)),`${name} production icon must exist`);
  }
- assert.match(html,/true3d-dice\.js\?v=20260910G2/);
+ assert.match(html,/true3d-dice\.js\?v=20260911R1/);
  const art=fs.readFileSync(path.join(root,'dice-reference-art.js'),'utf8');
  for(const name of ['relic','oddity','keepsake'])assert.ok(art.includes(`assets/treasure-${name}-gilded-v1.png`));
  assert.match(art,/ctx\.drawImage\(img,/);

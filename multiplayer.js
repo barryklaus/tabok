@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v1.2.0 Flexible Offering · C1';
+  const VERSION = 'v1.4.0 Clear Fate · R1';
   const TOKEN_KEY = 'tabok-multiplayer-token';
   const NAME_KEY = 'tabok-multiplayer-name';
   const ACTIVE_ROOM_KEY = 'tabok-active-guest-room';

@@ -15,13 +15,20 @@
     Object.freeze({roll:5,edge:'E',label:'South-west'}),
     Object.freeze({roll:6,edge:'F',label:'North-west'})
   ]);
-  const TREASURE_D6=Object.freeze(['RELIC','ODDITY','KEEPSAKE','BLANK','BLANK','BLANK']);
+  // Treasure remains a 50/50 event, but a successful face lets the Traveler
+  // choose the piece their carried pattern needs instead of awarding a random
+  // category. This preserves scarcity while making Balance an actual decision.
+  const TREASURE_D6=Object.freeze(['CHOOSE','CHOOSE','CHOOSE','BLANK','BLANK','BLANK']);
   const OFFER_D20=Object.freeze({ONE:[1,10],TWO:[11,20]});
+  // The four bonded Rune families retain their identity and appearance, but
+  // share one readable, automatic ruleset. No Rune result opens a second
+  // target-selection state, so every face is safe in local and online play.
+  const SIMPLE_RUNE_D6=Object.freeze(['WARP','DOUBLE','PHASE','BALANCE','FORTUNE','TIME']);
   const RUNE_FAMILIES=Object.freeze({
-    WAYFARER:['WARP','WARP','SWAP','REWIND','PHASE','WILD'],
-    WARDEN:['BIND','BIND','PHASE','PUSH','BAIT','WILD'],
-    TRICKSTER:['SWAP','SWAP','PULL','PUSH','MIRROR','WILD'],
-    ORACLE:['REROLL','REROLL','TRANSMUTE','REWIND','TIME','WILD']
+    WAYFARER:SIMPLE_RUNE_D6,
+    WARDEN:SIMPLE_RUNE_D6,
+    TRICKSTER:SIMPLE_RUNE_D6,
+    ORACLE:SIMPLE_RUNE_D6
   });
   const MINOR_CHAOS_D6=Object.freeze(['×1','×2','×3','×4','×5','NETWORK ATTACK']);
   const MAJOR_CHAOS_D6=Object.freeze(['FIREBALL','×2','×3','×4','×5','×6']);
@@ -116,7 +123,7 @@
   function rollFace(faces,random=Math.random){return faces[Math.min(faces.length-1,Math.floor((Number(random())||0)*faces.length))]}
 
   return{
-    VERSION:'3.3',TURN_TYPES,MOVEMENT_D6,HEX_DIRECTION_D6,TREASURE_D6,OFFER_D20,RUNE_FAMILIES,MINOR_CHAOS_D6,MAJOR_CHAOS_D6,
+    VERSION:'3.4',TURN_TYPES,MOVEMENT_D6,HEX_DIRECTION_D6,TREASURE_D6,OFFER_D20,RUNE_FAMILIES,MINOR_CHAOS_D6,MAJOR_CHAOS_D6,
     normalizeInventory,inventorySpread,crossingProbability,portalAwakeningCount,offerTransferCount,lastChance,
     minorMonsterRoll,majorMonsterRoll,rollFace
   };
