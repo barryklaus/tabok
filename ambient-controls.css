@@ -1,0 +1,22 @@
+.arena-light-controls{display:none}
+.true3d-active .arena-light-controls{display:block;position:absolute;right:16px;bottom:64px;z-index:9;color:#e5d6b3;font:12px/1.4 system-ui,sans-serif;letter-spacing:normal;pointer-events:auto}
+.arena-light-controls summary{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 13px;list-style:none;cursor:pointer;border:1px solid #867044;background:rgba(8,12,22,.9);color:#ecd9a9;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.arena-light-controls summary::-webkit-details-marker{display:none}
+.arena-light-controls summary:focus-visible,.arena-light-controls input:focus-visible,.arena-light-controls button:focus-visible{outline:2px solid #d4eaff;outline-offset:4px}
+.arena-light-panel{position:absolute;right:0;bottom:calc(100% + 8px);width:min(276px,calc(100vw - 32px));padding:18px;background:rgba(8,12,22,.97);border:1px solid #867044;box-shadow:0 10px 35px #0008}
+.arena-light-heading,.arena-light-scale{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.arena-light-heading label{color:#f6ead0;font-size:13px;font-weight:600}
+.arena-light-heading output{width:auto;margin:0;flex:0 0 auto;color:#bcd7f4;font-size:12px;font-variant-numeric:tabular-nums}
+.arena-light-panel input[type=range]{display:block;width:100%;height:36px;margin:8px 0 0;padding:0;accent-color:#bbd5ef;cursor:pointer;background:transparent!important;border:0!important;box-shadow:none!important;touch-action:pan-y}
+.arena-light-scale{font-size:10px;color:#a3aabd}
+.arena-light-panel p{margin:14px 0;color:#b8bdca;font-size:11px}
+.arena-light-panel button{width:100%;min-height:36px;font-size:10px;color:#efdaaf}
+@media(max-width:900px),(max-width:1180px) and (pointer:coarse){
+  .true3d-active .arena-light-controls{right:12px;top:64px;bottom:auto}
+  .arena-light-controls summary{min-height:44px}
+  .arena-light-panel{top:calc(100% + 8px);bottom:auto;max-height:calc(100dvh - 200px);overflow-y:auto}
+  .arena-light-panel input[type=range]{height:44px}
+}
+@media(max-width:900px) and (orientation:landscape),(max-width:1180px) and (pointer:coarse) and (orientation:landscape){
+  .true3d-active .arena-light-controls{right:calc(min(330px,38vw) + 16px)}
+}

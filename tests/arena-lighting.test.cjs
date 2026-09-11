@@ -8,6 +8,30 @@ const threeURL = pathToFileURL(path.join(root, 'vendor/three.core.min.js')).href
 const source = fs.readFileSync(path.join(root, 'arena-lighting.js'), 'utf8').replace("from 'three'", `from '${threeURL}'`);
 const artPromise = import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
 
+test('Ambient preference handles missing, corrupt and out-of-range saved values', async () => {
+  const { normalizeAmbientLevel, DEFAULT_AMBIENT_LEVEL } = await artPromise;
+  for (const value of [null, undefined, '', 'broken', NaN, Infinity, true]) {
+    assert.equal(normalizeAmbientLevel(value), DEFAULT_AMBIENT_LEVEL);
+  }
+  assert.equal(normalizeAmbientLevel('0'), 0);
+  assert.equal(normalizeAmbientLevel('72'), 72);
+  assert.equal(normalizeAmbientLevel(-20), 0);
+  assert.equal(normalizeAmbientLevel(200), 100);
+});
+
+test('Ambient range preserves the original night and progressively reveals shadows', async () => {
+  const { arenaFillAt, ARENA_LIGHTING } = await artPromise;
+  const original = arenaFillAt(0), recommended = arenaFillAt(55), bright = arenaFillAt(100);
+  assert.equal(original.hemisphere, ARENA_LIGHTING.hemisphere);
+  assert.equal(original.ambient, ARENA_LIGHTING.ambient);
+  assert.equal(original.skyColor.getHex(), 0x877ba8);
+  assert.equal(original.groundColor.getHex(), 0x160b08);
+  assert.equal(original.ambientColor.getHex(), 0x21101f);
+  for (const key of ['hemisphere', 'ambient']) {
+    assert.ok(original[key] < recommended[key] && recommended[key] < bright[key]);
+  }
+});
+
 test('Traveler lighting stays local, follows its anchor, and cannot intercept board picking', async () => {
   const { makePlayerAura } = await artPromise;
   const THREE = await import(threeURL);
