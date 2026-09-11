@@ -6,6 +6,27 @@ export const ARENA_LIGHTING = Object.freeze({
   torch: 48, player: 3.2
 });
 
+export const DEFAULT_AMBIENT_LEVEL = 55;
+
+export function normalizeAmbientLevel(value) {
+  if (value === null || value === undefined || value === '' || typeof value === 'boolean') return DEFAULT_AMBIENT_LEVEL;
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(100, Math.max(0, number)) : DEFAULT_AMBIENT_LEVEL;
+}
+
+// Lift shadow detail without increasing exposure, flame brightness, or shadow passes.
+// Zero retains the original lighting; the sky remains independently visible.
+export function arenaFillAt(value) {
+  const amount = normalizeAmbientLevel(value) / 100;
+  return {
+    hemisphere: ARENA_LIGHTING.hemisphere + amount * 4,
+    ambient: ARENA_LIGHTING.ambient + amount * 1.1,
+    skyColor: new THREE.Color(0x877ba8).lerp(new THREE.Color(0xb7cbed), amount),
+    groundColor: new THREE.Color(0x160b08).lerp(new THREE.Color(0x514454), amount),
+    ambientColor: new THREE.Color(0x21101f).lerp(new THREE.Color(0xc3cde5), amount)
+  };
+}
+
 export function makeLightPool(color, radius, opacity = .22) {
   const material = new THREE.ShaderMaterial({
     uniforms: { uColor: { value: new THREE.Color(color) }, uOpacity: { value: opacity } },

@@ -1,6 +1,14 @@
 # TABOK — The Crossing
 
-Version: **v1.5.2 — The Void Keeper · 2026.09.11.VK1**
+Version: **v1.5.3 — Moonlit Sanctuary · 2026.09.11.L2**
+
+## v1.5.3 — Moonlit Sanctuary
+
+- Open **Lighting** on the board during play to adjust **Ambient light** from 0–100%. The recommended 55% adds cool fill to reveal stone and characters while retaining torch and Portal contrast. Zero restores the original arena lighting.
+- The setting updates immediately, remembers this browser's preference, and stays separate from multiplayer state. **Restore recommended** returns to 55%; keyboard arrows, Home/End, touch, and Escape are supported.
+- Adds a locally hosted blue nebula and galaxy texture with fine stars. Mirrored sky sectors keep cloud detail visible around the board; the original star field remains available if the image fails to load. The sky adds one static draw and no lights or shadow passes.
+- Monster storm sequences temporarily dim the chosen fill and restore it afterward. The control remains available on compact screens and all four board quality modes.
+
 
 ## v1.5.2 — The Void Keeper
 

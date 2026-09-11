@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { createGuardianStatue } from './guardian-statues.js?v=20260910L2';
-import { createCosmicSanctuary } from './cosmic-sanctuary.js?v=20260909H1';
+import { createCosmicSanctuary } from './cosmic-sanctuary.js?v=20260911L2';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createTravelerPilot } from './character-3d-travelers.js?v=20260907G4';
 import { createMonsterPilot } from './monster-3d-models.js?v=20260911VK1';
 import { PortalCinematics } from './portal-cinematics.js?v=20260908A1';
 import { makeRuinStoneMaps, makeWornHexGeometry, makeRuinFoundation, makeContactShadow } from './ruin-board-art.js?v=20260909H2';
 
-import { ARENA_LIGHTING, makeLightPool, makePlayerAura } from './arena-lighting.js?v=20260910L1';
+import { ARENA_LIGHTING, DEFAULT_AMBIENT_LEVEL, normalizeAmbientLevel, arenaFillAt, makeLightPool, makePlayerAura } from './arena-lighting.js?v=20260911L2';
 
 const SQRT3 = Math.sqrt(3);
 const HEX_RADIUS = .72;
@@ -337,6 +337,8 @@ export class TabokTrue3DBoard {
     this.stateSignature = '';
     this.portalState = 'idle';
     this.quality = 'full';
+    this.ambientLevel = DEFAULT_AMBIENT_LEVEL;
+    this.ambientFill = arenaFillAt(this.ambientLevel);
     this.renderRatio = 1;
     this.renderRatioMin = .72;
     this.renderRatioMax = 1.25;
@@ -432,6 +434,7 @@ export class TabokTrue3DBoard {
     this.makeLights();
     this.makeGround();
     this.cosmicSanctuary = createCosmicSanctuary(this.scene, this.ruinStoneMaps.G);
+    this.setAmbientLight(this.ambientLevel);
     this.makeBoard();
     this.makeDormantJudges();
     this.makePortal();
@@ -479,6 +482,18 @@ export class TabokTrue3DBoard {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
       texture.repeat.set(keyTextureRepeat(texture), keyTextureRepeat(texture));
     }
+  }
+
+  setAmbientLight(value) {
+    this.ambientLevel = normalizeAmbientLevel(value);
+    this.ambientFill = arenaFillAt(this.ambientLevel);
+    if (!this.hemisphereLight || !this.ambientLight) return this.ambientLevel;
+    this.hemisphereLight.color.copy(this.ambientFill.skyColor);
+    this.hemisphereLight.groundColor.copy(this.ambientFill.groundColor);
+    this.ambientLight.color.copy(this.ambientFill.ambientColor);
+    this.hemisphereLight.intensity = this.ambientFill.hemisphere;
+    this.ambientLight.intensity = this.ambientFill.ambient;
+    return this.ambientLevel;
   }
 
   makeLights() {
@@ -1529,8 +1544,8 @@ export class TabokTrue3DBoard {
     const majorStorm=cinematicLive&&cinematic.major&&!reducedMotion;
     const stormProgress=cinematicLive?cinematicAge/cinematic.duration:1;
     const flash=majorStorm?Math.max(...[.15,.3,.49].map(at=>Math.max(0,1-Math.abs(stormProgress-at)*65))):0;
-    this.hemisphereLight.intensity = majorStorm ? .12 : ARENA_LIGHTING.hemisphere;
-    this.ambientLight.intensity = majorStorm ? .025 : ARENA_LIGHTING.ambient;
+    this.hemisphereLight.intensity = this.ambientFill.hemisphere * (majorStorm ? .22 : 1);
+    this.ambientLight.intensity = this.ambientFill.ambient * (majorStorm ? .2 : 1);
     this.moonLight.intensity = majorStorm ? (flash ? 7.5 : .38) : ARENA_LIGHTING.moon;
     this.rimLight.intensity = majorStorm ? (flash ? 6.5 : .35) : ARENA_LIGHTING.rim;
     const shake=cinematicLive&&!reducedMotion?(majorStorm?flash:Math.max(0,1-cinematicAge/400)):0;

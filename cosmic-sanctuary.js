@@ -56,26 +56,59 @@ function makeCloseStar() {
   return canvasTexture(canvas);
 }
 
-// Three static sky depths plus instanced ruins. No external image, sky animation,
-// dynamic light, shadow pass, or per-frame texture work is introduced.
+// One locally hosted galaxy panorama, two star depths and instanced ruins.
+// The baked star field remains a fallback if the artwork cannot load.
 export function createCosmicSanctuary(scene, stoneMaps) {
   let seed=71943;
   const random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
   const mobile=matchMedia('(max-width: 900px), (pointer: coarse)').matches;
   const distant=makeDistantField(random,mobile);scene.background=distant;scene.backgroundIntensity=.82;
+  // Mirrored sky sectors retain fine detail at the board camera's narrow field
+  // of view. An even repeat count closes the longitude seam in every orbit.
+  const skyMaterial=new THREE.ShaderMaterial({
+    uniforms:{uGalaxy:{value:null}},
+    vertexShader:`varying vec3 vDirection;
+      void main(){
+        vDirection=position;
+        vec4 clip=projectionMatrix*mat4(mat3(viewMatrix*modelMatrix))*vec4(position,1.);
+        gl_Position=clip.xyww;
+      }`,
+    fragmentShader:`uniform sampler2D uGalaxy;varying vec3 vDirection;
+      void main(){
+        vec3 d=normalize(vDirection);
+        vec2 uv=vec2(atan(d.z,d.x)/6.2831853+.5,asin(clamp(d.y,-1.,1.))/3.14159265+.5);
+        vec3 nebula=texture2D(uGalaxy,uv*2.).rgb;
+        float pole=smoothstep(.96,.995,abs(d.y));
+        gl_FragColor=vec4(mix(nebula*.55,vec3(.001,.002,.005),pole),1.);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+    side:THREE.BackSide,depthWrite:false,depthTest:false,fog:false
+  });
+  const sky=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),skyMaterial);
+  sky.name='Nebula sky';sky.frustumCulled=false;sky.renderOrder=-100;sky.visible=false;sky.raycast=()=>{};
+  sky.rotation.set(.15,.6,-.22);scene.add(sky);
+  let disposed=false;
+  const galaxy=new THREE.TextureLoader().load(new URL('./assets/galaxy-sanctuary-v1.jpg',import.meta.url).href,texture=>{
+    if(disposed){texture.dispose();return}
+    texture.colorSpace=THREE.SRGBColorSpace;
+    texture.wrapS=texture.wrapT=THREE.MirroredRepeatWrapping;
+    texture.minFilter=THREE.LinearMipmapLinearFilter;
+    skyMaterial.uniforms.uGalaxy.value=texture;sky.visible=true;
+  },undefined,()=>{/* Keep the lightweight star field if the image is unavailable. */});
   const root=new THREE.Group();root.name='Three-depth star sanctuary';scene.add(root);
 
   const middleTexture=makeMidField(random,mobile);
   const middleGeometry=new THREE.SphereGeometry(62,mobile?20:28,mobile?12:16);
-  const middleMaterial=new THREE.MeshBasicMaterial({map:middleTexture,transparent:true,opacity:.88,side:THREE.BackSide,depthWrite:false,fog:false});
+  const middleMaterial=new THREE.MeshBasicMaterial({map:middleTexture,transparent:true,opacity:.2,side:THREE.BackSide,depthWrite:false,fog:false});
   const middle=new THREE.Mesh(middleGeometry,middleMaterial);middle.rotation.y=.37;middle.renderOrder=-20;root.add(middle);
 
   const closeTexture=makeCloseStar(),closeStars=[],hues=[0xf4eee1,0xd9e5f3,0xf1dcc4,0xe2def6,0xd5e9e6];
   const closeCount=mobile?6:10;
   for(let index=0;index<closeCount;index++){
     const angle=index/closeCount*Math.PI*2+random()*.4,radius=34+random()*14,height=4+random()*18;
-    const material=new THREE.SpriteMaterial({map:closeTexture,color:hues[index%hues.length],transparent:true,opacity:.34+random()*.34,depthWrite:false,blending:THREE.AdditiveBlending,fog:false});
-    const star=new THREE.Sprite(material),size=.7+random()*1.55;
+    const material=new THREE.SpriteMaterial({map:closeTexture,color:hues[index%hues.length],transparent:true,opacity:.24+random()*.24,depthWrite:false,blending:THREE.AdditiveBlending,fog:false});
+    const star=new THREE.Sprite(material),size=.45+random()*.9;
     star.position.set(Math.sin(angle)*radius,height,Math.cos(angle)*radius);star.scale.set(size,size,1);star.renderOrder=-10;root.add(star);closeStars.push(star);
   }
 
@@ -110,6 +143,7 @@ export function createCosmicSanctuary(scene, stoneMaps) {
       motion.slice(0,rocks.count).forEach((item,index)=>{object.position.copy(item.pos);object.position.y+=reducedMotion?0:Math.sin(time*.16+item.phase)*.18;object.rotation.copy(item.rotation);if(!reducedMotion)object.rotation.y+=time*.008;object.scale.set(item.scale*.75,item.scale*1.6,item.scale);object.updateMatrix();rocks.setMatrixAt(index,object.matrix)});rocks.instanceMatrix.needsUpdate=true;
     },
     dispose(){
+      disposed=true;galaxy.dispose();sky.removeFromParent();sky.geometry.dispose();skyMaterial.dispose();
       scene.background=null;root.removeFromParent();rocks.geometry.dispose();blocks.geometry.dispose();middleGeometry.dispose();middleMaterial.dispose();
       closeStars.forEach(star=>star.material.dispose());stone.dispose();distant.dispose();middleTexture.dispose();closeTexture.dispose();
     }
