@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v1.4.0 Clear Fate · R1';
+  const VERSION = 'v1.5.0 Seven Trials · T1';
   const TOKEN_KEY = 'tabok-multiplayer-token';
   const NAME_KEY = 'tabok-multiplayer-name';
   const ACTIVE_ROOM_KEY = 'tabok-active-guest-room';
@@ -660,7 +660,7 @@
     return {
       eye:els.eye.textContent,title:els.title.textContent,instruction:els.instruction.textContent,dice:els.dice.innerHTML,guidance:{className:els.guidance.className,html:els.guidance.innerHTML},controls:els.controls.innerHTML,event:els.event.textContent,portalState:els.portal.querySelector('.eclipse-well')?.dataset.state||'idle',actionDecision:{className:els.actionDecision.className,body:els.actionDecisionBody.innerHTML,kicker:els.actionDecision.querySelector('.action-decision-kicker').textContent},
       turnRoll:{className:els.turnRoll.className,style:els.turnRoll.getAttribute('style')||'',portraitStyle:els.turnRollPortrait.getAttribute('style')||'',kicker:els.turnRollKicker.textContent,name:els.turnRollName.textContent,role:els.turnRollRole.textContent,status:els.turnRollStatus.textContent,dice:els.turnRollDice.innerHTML,control:els.turnRollControl.innerHTML},
-      message:{className:els.message.className,eye:els.messageEye.textContent,title:els.messageTitle.textContent,body:els.messageBody.innerHTML,continueText:els.messageContinue.textContent,continueHidden:els.messageContinue.hidden,input:document.getElementById('lastBreathInput')?.value || ''}
+      message:{className:els.message.className,eye:els.messageEye.textContent,title:els.messageTitle.textContent,body:els.messageBody.innerHTML,continueText:els.messageContinue.textContent,continueHidden:els.messageContinue.hidden,input:document.getElementById('lastBreathInput')?.value || '',challengePlayer:els.message.dataset.challengePlayer||game?.challengePlayer||''}
     };
   }
   function applyUI(ui) {
@@ -669,7 +669,7 @@
     els.eye.textContent=ui.eye; els.title.textContent=ui.title; els.instruction.textContent=ui.instruction; els.dice.innerHTML=ui.dice; if(ui.guidance){els.guidance.className=ui.guidance.className;els.guidance.innerHTML=ui.guidance.html} els.controls.innerHTML=ui.controls; els.event.textContent=ui.event; const portalState=ui.portalState||'idle',portal=els.portal.querySelector('.eclipse-well'); if(portal) portal.dataset.state=portalState; webglBoard?.setPortalState(portalState);
     if(ui.turnRoll){els.turnRoll.className=ui.turnRoll.className;els.turnRoll.setAttribute('style',ui.turnRoll.style);els.turnRollPortrait.setAttribute('style',ui.turnRoll.portraitStyle);els.turnRollKicker.textContent=ui.turnRoll.kicker;els.turnRollName.textContent=ui.turnRoll.name;els.turnRollRole.textContent=ui.turnRoll.role;els.turnRollStatus.textContent=ui.turnRoll.status;els.turnRollDice.innerHTML=ui.turnRoll.dice;els.turnRollControl.innerHTML=ui.turnRoll.control;els.turnRoll.classList.toggle('hidden',!localCanViewTurnRoll());if(!localCanViewTurnRoll())dice3D?.hide()}
     if(ui.actionDecision){els.actionDecision.className=ui.actionDecision.className;els.actionDecisionBody.innerHTML=ui.actionDecision.body;els.actionDecision.querySelector('.action-decision-kicker').textContent=ui.actionDecision.kicker}
-    els.message.className=ui.message.className; els.messageEye.textContent=ui.message.eye; els.messageTitle.textContent=ui.message.title; els.messageBody.innerHTML=ui.message.body; els.messageContinue.textContent=ui.message.continueText; els.messageContinue.hidden=ui.message.continueHidden;
+    els.message.className=ui.message.className; els.messageEye.textContent=ui.message.eye; els.messageTitle.textContent=ui.message.title; els.messageBody.innerHTML=ui.message.body; els.messageContinue.textContent=ui.message.continueText; els.messageContinue.hidden=ui.message.continueHidden; if(ui.message.challengePlayer)els.message.dataset.challengePlayer=ui.message.challengePlayer;else delete els.message.dataset.challengePlayer;
     const input=document.getElementById('lastBreathInput'); if(input) input.value=ui.message.input;
     applyingRemote=false; lockRemoteControls();
   }
@@ -703,6 +703,8 @@
     return true;
   }
   function challengedSlot() {
+    const explicit=els.message.dataset.challengePlayer||game?.challengePlayer;
+    if(/^P[1-6]$/.test(explicit||''))return explicit;
     const alert = els.messageBody.querySelector('.challenge-player-alert strong');
     const match = alert?.textContent.match(/\bP[1-6]\b/);
     return match?.[0] || active()?.p;
@@ -758,7 +760,8 @@
     }
     const target=findCommandTarget(command); if(!target||target.disabled)return;
     executingRemote=true;
-    if(typeof target.click==='function')target.click();else target.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
+    if(command.kind==='pointer')target.dispatchEvent(typeof PointerEvent==='function'?new PointerEvent(command.phase==='down'?'pointerdown':'pointerup',{bubbles:true,cancelable:true,pointerId:1,pointerType:'touch'}):new MouseEvent(command.phase==='down'?'mousedown':'mouseup',{bubbles:true,cancelable:true,view:window}));
+    else if(typeof target.click==='function')target.click();else target.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
     executingRemote=false; queueUI(); queueSnapshot();
   }
   function executeRemoteInput(sender, input) {
@@ -777,9 +780,20 @@
     // rejected here as "unassigned", freezing Portal, Last Breath, and Major Monster
     // scenes. The authoritative host owns CPU-only message resolution and may also
     // tap Continue manually if a mobile browser throttles an automatic timer.
-    const hostOwnsCPUMessage=isHost&&command.scope==='message'&&active()?.controller==='cpu';
+    const challengedTraveler=game?.players?.find(player=>player.p===challengedSlot());
+    const hostOwnsCPUMessage=isHost&&command.scope==='message'&&challengedTraveler?.controller==='cpu';
     if(isHost){if(!allowed&&!hostOwnsCPUMessage){event.preventDefault();event.stopImmediatePropagation();showRoomNotice('Waiting for the assigned Traveler on their device.')}}
     else{event.preventDefault();event.stopImmediatePropagation();if(allowed)sendToHost('command',{command});else showRoomNotice('It is not your Traveler’s decision.');}
+  },true);
+  document.addEventListener('pointerdown',event=>{
+    if(isHost||!room||room.phase!=='game'||executingRemote||!event.target.closest('.trial-hold-pad'))return;
+    event.preventDefault();event.stopImmediatePropagation();event.target.setPointerCapture?.(event.pointerId);
+    if(localCanUseMessage(event.target))sendToHost('command',{command:{kind:'pointer',id:event.target.id,phase:'down',scope:'message'}});else showRoomNotice('It is not your Traveler’s trial.');
+  },true);
+  document.addEventListener('pointerup',event=>{
+    if(isHost||!room||room.phase!=='game'||executingRemote||!event.target.closest('.trial-hold-pad'))return;
+    event.preventDefault();event.stopImmediatePropagation();
+    if(localCanUseMessage(event.target))sendToHost('command',{command:{kind:'pointer',id:event.target.id,phase:'up',scope:'message'}});
   },true);
   document.addEventListener('input', event => {
     if(isHost||!room||room.phase!=='game'||event.target.id!=='lastBreathInput'||applyingRemote)return;

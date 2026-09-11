@@ -1,6 +1,14 @@
 # TABOK — The Crossing
 
-Version: **v1.4.0 — Clear Fate · 2026.09.11.R1**
+Version: **v1.5.0 — Seven Trials · 2026.09.11.T1**
+
+## v1.5.0 — Seven Trials
+
+- Trial-or-Die is now a real seven-game challenge suite layered above the paused 3D board: Stop, Reaction, Hold, Dodge, Remember, Escape, and Swat the Fly each have distinct input and success rules.
+- The timer begins only after a mini-game is ready. Every challenge explicitly names and records its Traveler so online input is routed to the correct player.
+- Multiplayer now synchronizes Trial-or-Die ownership and supports remote press-and-release input for the Hold challenge on mouse, touch, and pen devices.
+- CPU Travelers attempt every mini-game automatically with a consistent survival chance. The authoritative host resolves their timing and outcome, so a CPU trial cannot wait for or be blocked by a human device.
+- Trials rotate through the complete set before repeating. Failure remains immediate death; success releases the Traveler and resumes the Monster Phase.
 
 ## v1.4.0 — Clear Fate
 
