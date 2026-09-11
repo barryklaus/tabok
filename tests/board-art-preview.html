@@ -1,12 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <base href="../"><title>TABOK · Board art check</title>
-<style>
+<link rel="stylesheet" href="ambient-controls.css?v=20260911L2"><style>
 *{box-sizing:border-box}body{margin:0;background:#050305;color:#decda9;font:14px system-ui}header{height:62px;display:flex;align-items:center;gap:16px;padding:12px 20px;background:#15120f}button,select{background:#28221b;border:1px solid #74613c;color:#ebd5a8;padding:8px;border-radius:4px}#stage{height:calc(100dvh - 62px);position:relative}canvas{display:block;width:100%;height:100%}output{font-size:12px;margin-left:auto}#actorTooltip{display:none}#error{position:absolute;top:80px;left:20px;color:#ff9797}@media(max-width:650px){header{height:108px;flex-wrap:wrap;gap:8px}#stage{height:calc(100dvh - 108px)}output{margin:0;width:100%}}
 </style><script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script></head>
 <body><header><strong>Fractured Sanctuary · Art check</strong><select id="quality" aria-label="Quality"><option value="full">High Fidelity 60</option><option value="auto">Cinematic maximum</option><option value="ultra">Performance</option><option value="lite">Battery saver</option></select><button id="orbit">Orbit view</button><button id="reset">Reset view</button><button id="major">Major escalation</button><button id="awaken">Awaken next guardian</button><button id="walk">Move guardian</button><button id="travelerWalk">Move Traveler</button><output id="stats">Preparing board…</output></header><div id="stage"><canvas id="board" aria-label="Board art preview"></canvas></div><div id="actorTooltip"></div><p id="error" role="alert"></p>
 <script type="module">
-import { TabokTrue3DBoard } from './true3d-board.js?v=20260911VK1';
+import { TabokTrue3DBoard } from './true3d-board.js?v=20260911L2';
+import { installAmbientControls } from './ambient-controls.js?v=20260911L2';
 const error = document.getElementById('error');
 window.addEventListener('error', event => error.textContent = event.message);
 window.addEventListener('unhandledrejection', event => error.textContent = String(event.reason));
@@ -16,6 +17,7 @@ try {
   const cells = Object.entries(columns).flatMap(([q,c]) => [...c.cells].map((type,i) => ({ q:+q,r:c.r0+i,type })));
   const board = new TabokTrue3DBoard(document.getElementById('board'), { cells, onHex:id => document.getElementById('stats').dataset.lastHex = id });
   await board.ready;
+  installAmbientControls(board, document.getElementById('stage'));
   const state = { players:[
     { id:'P1',charId:'misty',pos:'0,4',color:'#ff7957' },
     { id:'P2',charId:'cliff',pos:'0,18',color:'#54b8ee' },
