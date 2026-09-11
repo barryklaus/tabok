@@ -1,6 +1,12 @@
 # TABOK — The Crossing
 
-Version: **v1.5.0 — Seven Trials · 2026.09.11.T1**
+Version: **v1.5.1 — Last Chance · 2026.09.11.T2**
+
+## v1.5.1 — Last Chance
+
+- Every lethal outcome other than failing Trial-or-Die now pauses play for the endangered Traveler's private Last Chance D20.
+- Results 1–9 mean death, 10 automatically casts the D20 again, and 11–20 restores exactly 1 Heart.
+- Online ownership follows the endangered Traveler during the Monster Phase. Other human and CPU dice popups remain private, while CPU Last Chance rolls resolve automatically on the host.
 
 ## v1.5.0 — Seven Trials
 
@@ -9,6 +15,7 @@ Version: **v1.5.0 — Seven Trials · 2026.09.11.T1**
 - Multiplayer now synchronizes Trial-or-Die ownership and supports remote press-and-release input for the Hold challenge on mouse, touch, and pen devices.
 - CPU Travelers attempt every mini-game automatically with a consistent survival chance. The authoritative host resolves their timing and outcome, so a CPU trial cannot wait for or be blocked by a human device.
 - Trials rotate through the complete set before repeating. Failure remains immediate death; success releases the Traveler and resumes the Monster Phase.
+- Every other lethal hit opens the endangered Traveler's private Last Chance D20: 1–9 means death, 10 rerolls, and 11–20 restores the Traveler to exactly 1 Heart. CPU Last Chance rolls resolve automatically.
 
 ## v1.4.0 — Clear Fate
 

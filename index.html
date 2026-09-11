@@ -127,12 +127,12 @@
   <link rel="stylesheet" href="ritual-redesign.css?v=20260905A3">
   <link rel="stylesheet" href="portal-events.css?v=20260907I1">
   <link rel="stylesheet" href="celestial-ui.css?v=20260910C1">
-  <link rel="stylesheet" href="trial-or-die.css?v=20260911T1">
+  <link rel="stylesheet" href="trial-or-die.css?v=20260911T2">
   <script src="portal-events.js?v=20260907G4"></script>
 </head>
 <body>
   <div class="shell">
-    <header class="top"><div class="brand"><strong>TABOK</strong><span>The Crossing · The Balance</span><small class="build-label">v1.5.0 SEVEN TRIALS · Build 2026.09.11.T1</small></div><small class="perf-meter" id="perfMeter" title="Live animation frame rate">FPS —</small><div class="network-pill" id="networkPill">OFFLINE</div><div class="top-status"><b id="roundTop">New expedition</b><span id="phaseTop" class="webgl-status">Raising the 3D ruins…</span></div><button class="new-game" id="newGame">Room</button></header>
+    <header class="top"><div class="brand"><strong>TABOK</strong><span>The Crossing · The Balance</span><small class="build-label">v1.5.1 LAST CHANCE · Build 2026.09.11.T2</small></div><small class="perf-meter" id="perfMeter" title="Live animation frame rate">FPS —</small><div class="network-pill" id="networkPill">OFFLINE</div><div class="top-status"><b id="roundTop">New expedition</b><span id="phaseTop" class="webgl-status">Raising the 3D ruins…</span></div><button class="new-game" id="newGame">Room</button></header>
     <main class="layout">
       <aside class="guide" aria-label="How to play TABOK">
         <div class="character-preview" id="characterPreview"><div class="preview-caption"><strong>Choose a Traveler</strong><span>Live sculpted presence</span></div></div>
@@ -479,12 +479,13 @@
     function die(label,value,state='',index=0){const long=String(value).length>8?' long-value':'',rune=label==='Rune'?' rune-die-ui':'';return'<div class="die '+state+long+rune+'" style="--die-delay:'+(-index*.11)+'s" aria-label="'+label+' die: '+value+'"><small>'+label+'</small><b>'+value+'</b></div>'}
     async function animateDiceRoll(specs,message='Dice tumbling…',duration=1050){
       const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if(game?.phase!=='monster'&&active())webglBoard?.playActorAction(active().p,'dice',Math.max(900,duration));
+      const challenged=game?.challengePlayer&&game.players.find(player=>player.p===game.challengePlayer),diceActor=challenged||active(),challengeRoll=!!(challenged&&specs.some(spec=>spec.label==='Last Chance')),overlayRoll=game?.phase==='roll'||challengeRoll;
+      if(diceActor&&(game?.phase!=='monster'||challengeRoll))webglBoard?.playActorAction(diceActor.p,'dice',Math.max(900,duration));
       const markup=()=>specs.map((s,i)=>die(s.label,s.rolling===false?s.result:pick(s.faces),s.rolling===false?'held':'rolling',i)).join('');
       els.instruction.textContent=message;
       els.dice.innerHTML=markup();
       els.controls.innerHTML='<button class="primary" disabled>'+message+'</button>';
-      if(game?.phase==='roll'&&active()){
+      if(overlayRoll&&diceActor){
         els.turnRoll.classList.remove('landed');
         els.turnRoll.classList.add('rolling');
         els.turnRollStatus.textContent=message;
@@ -492,13 +493,13 @@
         els.turnRollControl.innerHTML='<button class="turn-roll-button" disabled>Fate is turning…</button>';
       }
       const hosts=[els.dice];
-      if(game?.phase==='roll'&&active())hosts.push(els.turnRollDice);
+      if(overlayRoll&&diceActor)hosts.push(els.turnRollDice);
       const nodeSets=hosts.map(host=>[...host.querySelectorAll('.die')]);
       const physical=!els.turnRoll.classList.contains('hidden')&&dice3D?.supports(specs);
       if(physical){
         const physicalDuration=reduced?420:game?.speed==='cinematic'?2350:game?.speed==='instant'?420:1850;
         pauseAmbient(true);
-        try{await dice3D.cast(specs,physicalDuration,active()?.color||'#9d62d4')}catch(error){pauseAmbient(false);throw error}
+        try{await dice3D.cast(specs,physicalDuration,diceActor?.color||'#9d62d4')}catch(error){pauseAmbient(false);throw error}
       }else{
         dice3D?.hide();
         const started=performance.now(),rollTime=reduced?60:timing(duration+520,'fx');
@@ -534,14 +535,14 @@
         node.classList.remove('rolling','held');
         node.classList.add('landed');
       }));
-      const turnResultReady=game?.phase==='roll'&&active();
+      const turnResultReady=overlayRoll&&diceActor;
       if(turnResultReady){
         els.turnRoll.classList.remove('rolling');
         els.turnRoll.classList.add('landed');
         els.turnRollStatus.textContent='Fate has decided.';
         els.turnRollControl.innerHTML='<button class="turn-roll-button" disabled>Fate has decided.</button>';
       }
-      const turnResultPresented=turnResultReady&&active()?.controller==='human';
+      const turnResultPresented=turnResultReady&&diceActor?.controller==='human';
       await wait(reduced?50:(turnResultPresented?2000:timing(430,'fx')));
       dice3D?.hide();
       if(physical)pauseAmbient(false);
@@ -692,6 +693,11 @@
     function finishPlayerTurn(){if(portalVisualPending.size){waitForPortalVisuals(finishPlayerTurn);return}setPortalState('idle');const justPlayed=active(),extra=justPlayed?.status==='active'&&game.turn?.extraTurn;if(!extra)game.acted.add(justPlayed.p);if(finishGameImmediately())return;if(extra){game.phase='choose';game.turn=null;addLog(justPlayed.name+' takes the turn stolen by TIME.');renderAll();return}const remaining=game.players.map((p,i)=>({p,i})).filter(x=>x.p.status==='active'&&!game.acted.has(x.p.p));if(remaining.length){let next=remaining.find(x=>x.i>game.current)||remaining[0];game.current=next.i;game.phase='choose';game.turn=null;addLog(active().name+' begins their turn.');renderAll()}else{game.autoMonsters=true;game.monsterRoll=null;game.phase='monster';game.turn=null;renderAll()}}
     async function applyDamage(p,amount,reason,events){const left=Math.max(0,amount);impactFrame('damage','Monster Strike');focusCamera(p.pos,'focus',850);actorReaction(p,'damage','−'+left+' HEART');if(left>0){webglBoard?.damageFeedback?.(p.p,left);p.life-=left;events.push(p.name+' lost '+left+' Heart'+(left===1?'':'s')+' ('+reason+')')}if(p.life<=0)await resolveLastChance(p,reason,events)}
     async function resolveLastChance(p,reason,events){let roll=10;while(roll===10){roll=1+Math.floor(Math.random()*20);await animateDiceRoll([{label:'Last Chance',faces:Array.from({length:20},(_,i)=>i+1),result:roll}],p.name+' faces Last Chance…',700);if(roll===10)events.push(p.name+' rolled 10 and must roll Last Chance again')}if(roll>=11){p.life=1;actorReaction(p,'resolve','♥ SURVIVE');events.push(p.name+' rolled '+roll+' and survives on 1 Heart')}else{events.push(p.name+' rolled '+roll+' and dies');kill(p,events)}}
+    async function resolveLastChance(p,reason,events){
+      game.challengePlayer=p.p;els.turnRoll.dataset.challengePlayer=p.p;els.turnRoll.style.setProperty('--pc',p.color);els.turnRollPortrait.style.setProperty('--portrait-x',portraitX(p.spriteRow));els.turnRollPortrait.style.setProperty('--portrait-y',portraitY(p.spriteRow));els.turnRollPortrait.style.setProperty('--turn-portrait-y',turnPortraitY(p.spriteRow));els.turnRollKicker.textContent='Last Chance · '+reason;els.turnRollName.textContent=p.name;els.turnRollRole.textContent='At zero Hearts, fate offers one final cast';els.turnRollStatus.textContent='D20: 1–9 die · 10 cast again · 11–20 survive on 1 Heart';els.turnRollDice.innerHTML=die('Last Chance','—');els.turnRollControl.innerHTML='<button class="turn-roll-button" id="lastChanceRollButton">Roll for life</button>';const visible=!window.TabokCanViewTurnRoll||window.TabokCanViewTurnRoll(p);els.turnRoll.className='turn-roll-overlay last-chance-roll'+(visible?'':' hidden');let rolling=false;
+      const cast=async()=>{if(rolling)return;rolling=true;const button=document.getElementById('lastChanceRollButton');if(button)button.disabled=true;let roll=10;while(roll===10){roll=1+Math.floor(Math.random()*20);await animateDiceRoll([{label:'Last Chance',faces:Array.from({length:20},(_,i)=>i+1),result:roll}],p.name+' casts the Last Chance D20…',700);if(roll===10){events.push(p.name+' rolled 10 and must roll Last Chance again');els.turnRollStatus.textContent='10 · Fate refuses its answer. Cast again…';await wait(timing(850,'fx'))}}if(roll>=11){p.life=1;actorReaction(p,'resolve','♥ SURVIVE');events.push(p.name+' rolled '+roll+' and survives on 1 Heart');els.turnRollStatus.textContent=roll+' · SURVIVE ON 1 HEART'}else{events.push(p.name+' rolled '+roll+' and dies');els.turnRollStatus.textContent=roll+' · DEATH';kill(p,events)}await wait(timing(1300,'fx'));els.turnRoll.className='turn-roll-overlay hidden';delete els.turnRoll.dataset.challengePlayer;game.challengePlayer=null;dice3D?.hide();renderAll()};
+      if(p.controller==='cpu')setTimeout(cast,650);else{const button=document.getElementById('lastChanceRollButton');if(button)button.onclick=cast}while(!rolling)await wait(50);while(game.challengePlayer===p.p)await wait(80)
+    }
     function kill(p,events){emitPortalVisual('death',p,p.pos);p.status='dead';p.inventory=[0,0,0];dropRune(p);game.finishes.push({name:p.name,outcome:'DNF',round:game.round});events.push(p.name+' is DNF; all treasure and the Rune are destroyed')}
     function drawLastBreathSentence(){if(game.lastBreathSeen.length>=LAST_BREATH_SENTENCES.length)game.lastBreathSeen=[];const available=LAST_BREATH_SENTENCES.map((_,i)=>i).filter(i=>!game.lastBreathSeen.includes(i)),index=pick(available);game.lastBreathSeen.push(index);return LAST_BREATH_SENTENCES[index]}
     function lastBreathCharacters(sentence,value){let cursor=0;return(sentence.match(/\S+|\s+/g)||[]).map(part=>{if(/^\s+$/.test(part)){cursor+=part.length;return''}const word=[...part].map(char=>{const i=cursor++,safe=char.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');return'<span class="last-breath-char '+(i<value.length?(value[i]===char?'correct':'wrong'):'pending')+'">'+safe+'</span>'}).join('');return'<span class="last-breath-word">'+word+'</span>'}).join('')}
@@ -835,7 +841,7 @@
   </script>
   <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="network-config.js?v=20260903U1"></script>
-  <script src="multiplayer.js?v=20260911T1"></script>
+  <script src="multiplayer.js?v=20260911T2"></script>
   <script src="ritual-redesign.js?v=20260905A3"></script>
 </body>
 </html>

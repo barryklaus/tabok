@@ -59,3 +59,14 @@ test('multiplayer routes trial clicks and hold gestures only to the challenged T
   assert.match(multiplayer,/closest\('\.trial-hold-pad'\)/);
   assert.match(multiplayer,/localCanUseMessage\(event\.target\)/);
 });
+
+test('every ordinary lethal hit receives the private Last Chance D20',()=>{
+  assert.match(html,/if\(p\.life<=0\)await resolveLastChance\(p,reason,events\)/);
+  assert.match(html,/id="lastChanceRollButton"/);
+  assert.match(html,/1–9 die · 10 cast again · 11–20 survive on 1 Heart/);
+  assert.match(html,/while\(roll===10\)/);
+  assert.match(html,/if\(roll>=11\)\{p\.life=1/);
+  assert.match(html,/game\.challengePlayer=p\.p;els\.turnRoll\.dataset\.challengePlayer=p\.p/);
+  assert.match(multiplayer,/turnRoll\.dataset\.challengePlayer\|\|game\?\.challengePlayer/);
+  assert.match(multiplayer,/document\.querySelector\('#'\+cssEscape\(command\.id\)\)/);
+});
