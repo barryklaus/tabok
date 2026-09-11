@@ -772,7 +772,7 @@
   }
 
   document.addEventListener('click', event => {
-    if(!room||room.phase!=='game'||executingRemote||event.target.closest('#globalChat'))return;
+    if(!room||room.phase!=='game'||executingRemote||event.target.closest('#globalChat, .arena-light-controls'))return;
     const command=descriptorFor(event.target); if(!command)return;
     // Sound is a local device preference, never an authoritative game command.
     if(command.id==='newGame'||command.id==='soundToggle')return;
