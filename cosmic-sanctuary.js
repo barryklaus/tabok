@@ -11,36 +11,36 @@ function canvasTexture(canvas, colorSpace = THREE.SRGBColorSpace) {
 
 function makeDistantField(random, mobile) {
   const canvas = document.createElement('canvas');
-  canvas.width = mobile ? 1024 : 2048; canvas.height = mobile ? 512 : 1024;
+  canvas.width = mobile ? 2048 : 4096; canvas.height = mobile ? 1024 : 2048;
   const context = canvas.getContext('2d');
   context.fillStyle = '#020306'; context.fillRect(0, 0, canvas.width, canvas.height);
-  // Unresolved lights are baked into the one background texture: no draw cost.
-  const image = context.getImageData(0, 0, canvas.width, canvas.height), data = image.data;
-  for (let index = 0; index < data.length; index += 4) {
-    const noise = random(), star = noise > .9975 ? 130 + random() * 125 : random() * 1.3;
-    data[index] = 1 + star * .88; data[index + 1] = 2 + star * .94;
-    data[index + 2] = 5 + star; data[index + 3] = 255;
+  // Keep the same star density at higher resolution, with subpixel pinpoints.
+  const count = mobile ? 1300 : 5200;
+  for (let index = 0; index < count; index++) {
+    const x = random() * canvas.width, y = random() * canvas.height;
+    const radius = .35 + random() * .4;
+    context.fillStyle = `rgba(210,224,255,${.35 + random() * .6})`;
+    context.beginPath(); context.arc(x, y, radius, 0, Math.PI * 2); context.fill();
   }
-  context.putImageData(image, 0, 0);
   const texture = canvasTexture(canvas); texture.mapping = THREE.EquirectangularReflectionMapping;
   return texture;
 }
 
 function makeMidField(random, mobile) {
   const canvas = document.createElement('canvas');
-  canvas.width = mobile ? 768 : 1536; canvas.height = mobile ? 384 : 768;
+  canvas.width = mobile ? 1536 : 3072; canvas.height = mobile ? 768 : 1536;
   const context = canvas.getContext('2d'); context.clearRect(0, 0, canvas.width, canvas.height);
   const count = mobile ? 230 : 430;
   for (let index = 0; index < count; index++) {
     const x = random() * canvas.width, y = random() * canvas.height;
-    const rare = random() > .91, radius = rare ? 1.2 + random() * 1.9 : .35 + random() * .8;
+    const rare = random() > .97, radius = rare ? .85 + random() * .45 : .3 + random() * .45;
     const alpha = .2 + random() * .58, warm = random() > .72;
     context.fillStyle = warm ? `rgba(231,210,174,${alpha})` : `rgba(196,210,228,${alpha})`;
     context.beginPath(); context.arc(x, y, radius, 0, Math.PI * 2); context.fill();
     if (rare) {
-      context.fillStyle = `rgba(238,233,216,${alpha * .38})`;
-      context.fillRect(x - radius * 3.4, y - .3, radius * 6.8, .6);
-      context.fillRect(x - .3, y - radius * 3.4, .6, radius * 6.8);
+      context.fillStyle = `rgba(238,233,216,${alpha * .18})`;
+      context.fillRect(x - radius * 2, y - .3, radius * 4, .6);
+      context.fillRect(x - .3, y - radius * 2, .6, radius * 4);
     }
   }
   return canvasTexture(canvas);
@@ -48,11 +48,12 @@ function makeMidField(random, mobile) {
 
 function makeCloseStar() {
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = 256;
-  const context = canvas.getContext('2d'), gradient = context.createRadialGradient(128,128,1,128,128,124);
-  gradient.addColorStop(0,'rgba(255,255,255,1)'); gradient.addColorStop(.035,'rgba(255,255,255,.98)');
-  gradient.addColorStop(.12,'rgba(255,255,255,.42)'); gradient.addColorStop(.42,'rgba(255,255,255,.075)');
-  gradient.addColorStop(1,'rgba(255,255,255,0)'); context.fillStyle=gradient; context.fillRect(0,0,256,256);
-  context.fillStyle='rgba(255,255,255,.42)'; context.fillRect(20,127,216,2); context.fillRect(127,20,2,216);
+  const context = canvas.getContext('2d'), gradient = context.createRadialGradient(128,128,0,128,128,48);
+  gradient.addColorStop(0,'rgba(255,255,255,1)');
+  gradient.addColorStop(.12,'rgba(255,255,255,.9)');
+  gradient.addColorStop(.3,'rgba(255,255,255,.15)');
+  gradient.addColorStop(1,'rgba(255,255,255,0)');
+  context.fillStyle=gradient; context.fillRect(0,0,256,256);
   return canvasTexture(canvas);
 }
 
@@ -76,7 +77,7 @@ export function createCosmicSanctuary(scene, stoneMaps) {
   for(let index=0;index<closeCount;index++){
     const angle=index/closeCount*Math.PI*2+random()*.4,radius=34+random()*14,height=4+random()*18;
     const material=new THREE.SpriteMaterial({map:closeTexture,color:hues[index%hues.length],transparent:true,opacity:.24+random()*.24,depthWrite:false,blending:THREE.AdditiveBlending,fog:false});
-    const star=new THREE.Sprite(material),size=.45+random()*.9;
+    const star=new THREE.Sprite(material),size=.22+random()*.3;
     star.position.set(Math.sin(angle)*radius,height,Math.cos(angle)*radius);star.scale.set(size,size,1);star.renderOrder=-10;root.add(star);closeStars.push(star);
   }
 

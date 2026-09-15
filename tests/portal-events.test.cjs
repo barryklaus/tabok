@@ -195,7 +195,7 @@ test('Starpath removes replay, resolves automation authoritatively, shortens Por
  assert.match(multiplayer,/hostSeat\.kind = 'human'/);
  assert.match(multiplayer,/mp-start-path/);
  assert.match(multiplayer,/function scheduleInitiativeRolls\(\)/);
- assert.match(cosmic,/canvas\.width = mobile \? 1024 : 2048/);
+ assert.match(cosmic,/canvas\.width = mobile \? 2048 : 4096/);
  assert.match(cosmic,/new THREE\.SphereGeometry\(62,mobile\?20:28,mobile\?12:16\)/);
  assert.match(cosmic,/LinearMipmapLinearFilter/);
 });
@@ -294,7 +294,7 @@ test('Mobile Anchor prevents Safari eviction, rejoins guests and restores full C
  const cosmic=fs.readFileSync(path.join(root,'cosmic-sanctuary.js'),'utf8');
  const ruin=fs.readFileSync(path.join(root,'ruin-board-art.js'),'utf8');
  assert.match(html,/Cinematic · highest quality/);
- assert.match(cosmic,/canvas\.width = mobile \? 1024 : 2048/);
+ assert.match(cosmic,/canvas\.width = mobile \? 2048 : 4096/);
  assert.match(ruin,/matches \? 256 : 512/);
  assert.match(bust,/this\.available=!matchMedia/);
  assert.match(multiplayer,/tabok-active-guest-room/);

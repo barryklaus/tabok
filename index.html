@@ -394,7 +394,7 @@
     async function initGPUBoard(){
       const status=document.getElementById('phaseTop');
       try{
-        const{TabokTrue3DBoard}=await import('./true3d-board.js?v=20260915D1'),cells3D=[];
+        const{TabokTrue3DBoard}=await import('./true3d-board.js?v=20260915D2'),cells3D=[];
         Object.entries(COLUMNS).forEach(([qValue,col])=>{const q=Number(qValue);[...col.cells].forEach((type,i)=>cells3D.push({q,r:col.r0+i,type}))});
         webglBoard=new TabokTrue3DBoard(document.getElementById('webglBoard'),{
           cells:cells3D,
