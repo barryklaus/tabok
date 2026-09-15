@@ -79,6 +79,10 @@ test('candles stay dark until awakening, then cast local light that follows the 
   if(!active){
    const visibleLights=[];statue.traverseVisible(node=>{if(node.isLight)visibleLights.push(node);});
    assert.equal(visibleLights.length,0,'dormant lights are excluded from rendering');
+   statue.userData.setActive(true);statue.userData.update(1);
+   assert.equal(statue.userData.guardian.active,true);
+   assert.equal(flames.visible,true,'the existing dormant sculpture awakens without rebuilding geometry');
+   for(const light of lights)assert.ok(light.intensity>0);
   }
  }
 });

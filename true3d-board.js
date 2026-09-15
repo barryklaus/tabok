@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createGuardianStatue } from './guardian-statues.js?v=20260910L2';
+import { createGuardianStatue } from './guardian-statues.js?v=20260915P1';
 import { createCosmicSanctuary } from './cosmic-sanctuary.js?v=20260911L2';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createTravelerPilot } from './character-3d-travelers.js?v=20260907G4';
@@ -356,6 +356,7 @@ export class TabokTrue3DBoard {
     this.framingKey = '';
     this.suspended = document.hidden;
     this.presentationPaused = document.documentElement.classList.contains('effects-paused');
+    this.prewarmedMajorVisual = null;
     this.ready = this.init();
   }
 
@@ -438,6 +439,14 @@ export class TabokTrue3DBoard {
     this.makeBoard();
     this.makeDormantJudges();
     this.makePortal();
+    // Construct the expensive procedural Seventh while the board is still on
+    // its loading screen. Summoning can then attach the ready sculpture without
+    // a main-thread geometry/texture hitch in the middle of play.
+    try {
+      this.prewarmedMajorVisual = createMonsterPilot('major');
+      this.prewarmedMajorVisual.scale.setScalar(.36);
+      this.scene.add(this.prewarmedMajorVisual);
+    } catch (_) { this.prewarmedMajorVisual = null; }
     this.scene.add(this.itemRoot, this.actorRoot, this.occupancyRoot, this.highlightRoot, this.effectRoot);
     this.bindInput();
     this.setQuality('full');
@@ -450,6 +459,9 @@ export class TabokTrue3DBoard {
     } catch (_) {
       // Compilation is an optional warm-up; rendering remains the fallback.
     }
+    // compile() has now visited the Seventh's materials. Keep the sculpture in
+    // memory, but out of the live scene, until the rules actually summon it.
+    this.prewarmedMajorVisual?.removeFromParent();
     this.visibilityHandler = () => {
       this.suspended = document.hidden;
       this.lastFrameAt = performance.now();
@@ -605,7 +617,7 @@ export class TabokTrue3DBoard {
 
   syncDormantJudges(remaining=6) {
     const awakened=6-Math.max(0,Math.min(6,Number(remaining)||0));
-    this.dormantJudges?.forEach((judge,index)=>{judge.visible=index>=awakened});
+    this.dormantJudges?.forEach((judge,index)=>{if(judge.parent===this.dormantJudgeRoot)judge.visible=index>=awakened});
   }
 
   makeBoard() {
@@ -1061,7 +1073,9 @@ export class TabokTrue3DBoard {
     const awakenedJudge = actor.kind === 'monster' && !major;
     let visual;
     try {
-      visual = actor.kind === 'player' ? createTravelerPilot(actor.charId || 'misty') : major ? createMonsterPilot('major') : this.makeJudgeModel(Math.max(0,(Number(actor.statue)||1)-1),true);
+      if(actor.kind==='player')visual=createTravelerPilot(actor.charId||'misty');
+      else if(major){visual=this.prewarmedMajorVisual||createMonsterPilot('major');this.prewarmedMajorVisual=null;}
+      else{const statueIndex=Math.max(0,(Number(actor.statue)||1)-1),dormant=this.dormantJudges?.[statueIndex];if(dormant?.parent===this.dormantJudgeRoot){dormant.removeFromParent();dormant.visible=true;dormant.userData.setActive?.(true);visual=dormant}else visual=this.makeJudgeModel(statueIndex,true)}
       // Keep silhouettes readable without letting them spill beyond their board hex.
       const scale = actor.kind === 'player' ? (actor.charId === 'justin' ? .33 : .36) : major ? .36 : .86;
       visual.scale.setScalar(scale);
@@ -1069,7 +1083,7 @@ export class TabokTrue3DBoard {
         const station = worldFor(JUDGE_SITES[Math.max(0, Math.min(5, (Number(actor.statue) || 1) - 1))]);
         visual.rotation.y = Math.atan2(-station.x, -station.z);
       }
-      visual.position.y = 0;
+      visual.position.set(0, 0, 0);
       visual.traverse(node => {
         if (node.userData.galleryPlatform) node.visible = false;
         if (!node.isMesh) return;
@@ -1131,6 +1145,20 @@ export class TabokTrue3DBoard {
     if (actor?.userData.departing || actor?.userData.cinematicLocks) { actor.userData.pendingRemoval = true; return; }
     if (actor) {
       clearTimeout(actor.userData.actionTimer);clearTimeout(actor.userData.damageFlashTimer);actor.userData.actionResolve?.();
+      const visual=actor.userData.visual3D;
+      if(visual&&actor.userData.actorKind==='monster'){
+        actor.remove(visual);visual.userData.setMode?.('idle');visual.position.set(0,0,0);
+        if(actor.userData.major){
+          // A new game can summon the Seventh again without reconstructing or
+          // recompiling the procedural sculpture.
+          this.prewarmedMajorVisual=visual;
+        }else if(Number.isInteger(visual.userData.guardian?.index)){
+          const index=visual.userData.guardian.index,position=worldFor(JUDGE_SITES[index]);
+          visual.userData.setActive?.(false);visual.scale.setScalar(.86);visual.position.copy(position);visual.rotation.y=Math.atan2(-position.x,-position.z);visual.visible=true;
+          this.dormantJudgeRoot.add(visual);
+        }
+        actor.userData.visual3D=null;
+      }
       this.actorRoot.remove(actor);
       disposeObject(actor);
       this.actors.delete(id);
@@ -1239,7 +1267,6 @@ export class TabokTrue3DBoard {
     if (signature === this.stateSignature) return;
     this.stateSignature = signature;
     this.majorPresent = state.monsters.some(monster => monster.major);
-    this.syncDormantJudges(state.dormantJudges);
     const actors = [
       ...state.players.map(player => ({ ...player, kind: 'player' })),
       ...state.monsters.map(monster => ({ ...monster, kind: 'monster' }))
@@ -1247,6 +1274,9 @@ export class TabokTrue3DBoard {
     const nextIds = new Set(actors.map(actor => actor.id));
     [...this.actors.keys()].forEach(id => { if (!nextIds.has(id)) this.removeActor(id); });
     actors.forEach(actor => this.syncActor(actor));
+    // Run after removals so reclaimed Judge sculptures receive the visibility
+    // that belongs to the incoming state (not the state that just ended).
+    this.syncDormantJudges(state.dormantJudges);
     this.syncItems(state);
     this.syncLegalHighlights(state);
   }
@@ -1479,6 +1509,25 @@ export class TabokTrue3DBoard {
         if(visual)visual.rotation.y=priorHeading+headingDelta*Math.min(1,t/.18);
         actor.position.lerpVectors(start, end, eased);
         if (t < 1) requestAnimationFrame(step); else { actor.position.copy(end);if(visual)visual.rotation.y=targetHeading;if(!continuousJudge||journeyStep>=journeyLength-1)visual?.userData.setMode?.('idle');resolve(); }
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  animateActorRoute(id, from, route, duration = 720) {
+    const actor=this.actors.get(id),hexes=Array.isArray(route)?route.filter(Boolean):[];
+    if(!actor||!hexes.length)return Promise.resolve();
+    const points=[worldFor(from),...hexes.map(worldFor)],segmentCount=points.length-1,visual=actor.userData.visual3D,started=performance.now();
+    let previous=started,finalHeading=actor.userData.heading||0;
+    visual?.userData.setMode?.(actor.userData.major?'levitate':'walk');
+    return new Promise(resolve=>{
+      const step=now=>{
+        const t=Math.min(1,(now-started)/Math.max(1,duration)),eased=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,travel=eased*segmentCount,index=Math.min(segmentCount-1,Math.floor(travel)),local=index===segmentCount-1&&t===1?1:travel-index;
+        const start=points[index],end=points[index+1],dx=end.x-start.x,dz=end.z-start.z,targetHeading=Math.atan2(dx,dz),frameSeconds=Math.max(0,(now-previous)/1000),turnBlend=1-Math.exp(-14*frameSeconds);
+        previous=now;finalHeading=targetHeading;actor.position.lerpVectors(start,end,local);
+        if(visual){const current=visual.rotation.y,delta=Math.atan2(Math.sin(targetHeading-current),Math.cos(targetHeading-current));visual.rotation.y=current+delta*turnBlend}
+        if(t<1){requestAnimationFrame(step);return}
+        actor.position.copy(points.at(-1));actor.userData.heading=finalHeading;actor.userData.hasTravelHeading=true;if(visual)visual.rotation.y=finalHeading;visual?.userData.setMode?.('idle');resolve();
       };
       requestAnimationFrame(step);
     });

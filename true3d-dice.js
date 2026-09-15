@@ -69,7 +69,7 @@ export class TabokDice3D {
   }
 
   supports(specs) {
-    const singleDie=specs?.length===1&&Object.hasOwn(FACE_SETS,specs[0].label);
+    const singleDie=specs?.length===1&&(Object.hasOwn(FACE_SETS,specs[0].label)||specs[0].label==='Last Chance');
     const offerOnly=specs?.length===1&&specs[0].label==='Offer';
     const turnCast=(specs?.length===2||specs?.length===3)&&specs[0].label==='Movement'&&['Treasure','Rune'].includes(specs[1].label)&&(specs.length===2||specs[2].label==='Offer');
     return (singleDie||offerOnly||turnCast)&&specs.every(spec=>spec.rolling!==false);
@@ -104,7 +104,9 @@ export class TabokDice3D {
   }
 
   buildDice(kind, x, faceLabels=null) {
-    if(kind==='Offer')return this.buildOfferDie(x,faceLabels);
+    // Last Chance is the Offering D20 under a different rules label. Route it
+    // through the exact same geometry, numbered faces, materials and cache.
+    if(kind==='Offer'||kind==='Last Chance')return this.buildOfferDie(x,faceLabels);
     const {labels,materials,frame} = this.dieResource(kind,faceLabels);
     materials.forEach(material=>{material.emissive.set(0x000000);material.emissiveIntensity=0});
     const die = new THREE.Mesh(this.dieGeometry, materials);die.add(frame.clone(true));

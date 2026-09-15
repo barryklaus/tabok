@@ -269,8 +269,9 @@ function candles(root,m,active) {
 
 export function createGuardianStatue(index=0,active=false) {
   index=((Math.trunc(Number(index)||0)%6)+6)%6;
+  let isActive=Boolean(active);
   const root=new THREE.Group(),definition=GUARDIANS[index];
-  root.name=`${active?'Awakened':'Dormant'} ${definition.name}`;
+  root.name=`${isActive?'Awakened':'Dormant'} ${definition.name}`;
   const m={
     stone:material(0x5d5350,'stone',{side:THREE.DoubleSide,bumpScale:.012}),
     mantle:material(0x4b4140,'stone',{side:THREE.DoubleSide,bumpScale:.009}),
@@ -288,16 +289,17 @@ export function createGuardianStatue(index=0,active=false) {
     fire:new THREE.MeshBasicMaterial({color:0xff8e27,toneMapped:false}),hot:new THREE.MeshBasicMaterial({color:0xffe9b0,toneMapped:false})
   };
   pedestal(root,m);robes(root,m);hood(root,m);handsAndSleeves(root,m,index);
-  const crown=halo(root,m,index);relic(root,m,index);const candleFlames=candles(root,m,active);
+  const crown=halo(root,m,index);relic(root,m,index);const candleFlames=candles(root,m,isActive);
   const candleLights=candleFlames.children.filter(node=>node.isPointLight);
   const reducedMotion=typeof matchMedia==='function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   finish(root);
   root.traverse(node=>{if(node.isMesh){node.castShadow=false;node.receiveShadow=false;node.userData.preserveMaterial=true;node.userData.actorModelMesh=true;}});
   let mode='idle';
-  root.userData.guardian={...definition,index,active};
+  root.userData.guardian={...definition,index,active:isActive};
+  root.userData.setActive=value=>{isActive=Boolean(value);root.name=`${isActive?'Awakened':'Dormant'} ${definition.name}`;root.userData.guardian.active=isActive;candleFlames.visible=isActive;candleLights.forEach(light=>{light.intensity=isActive ? .85 : 0})};
   root.userData.setMode=value=>{mode=value;};
   root.userData.update=time=>{
-    if(active) {
+    if(isActive) {
       const flicker=reducedMotion?1:.94+Math.sin(time*9.1+index)*.04+Math.sin(time*14.3+index*2)*.02;
       m.fire.color.setRGB(1,.29*flicker,.025);
       candleLights.forEach(light=>{light.intensity=.85*flicker;});

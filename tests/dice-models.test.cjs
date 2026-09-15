@@ -19,5 +19,6 @@ test('dice redesign preserves the treasure odds and reuses ready resources',asyn
  const rune=d.buildDice('Rune',0);assert.deepEqual(rune.userData.labels,['WARP','DOUBLE','PHASE','BALANCE','FORTUNE','TIME']);
  const action=d.buildDice('Action',0);assert.deepEqual(action.userData.labels,['TAKE','TAKE','TAKE','GIVE','GIVE','STEAL']);
  const first=d.buildOfferDie(0),resource=d.dieResources.get('Offer|'+first.userData.labels.join(','));d.clearDice();const second=d.buildOfferDie(0);assert.equal(d.dieResources.get('Offer|'+second.userData.labels.join(',')),resource);assert.equal(first.children[0].geometry,second.children[0].geometry);
- assert.equal(d.supports([{label:'Movement'}]),true);assert.equal(d.supports([{label:'Direction'}]),false);assert.equal(d.supports([{label:'Treasure',rolling:false}]),false);
+ d.clearDice();const life=d.buildDice('Last Chance',0,Array.from({length:20},(_,index)=>index+1));assert.equal(life.userData.kind,'Offer');assert.deepEqual(life.userData.labels,first.userData.labels);assert.equal(life.children[0].geometry,first.children[0].geometry);
+ assert.equal(d.supports([{label:'Movement'}]),true);assert.equal(d.supports([{label:'Last Chance'}]),true);assert.equal(d.supports([{label:'Direction'}]),false);assert.equal(d.supports([{label:'Treasure',rolling:false}]),false);
 });

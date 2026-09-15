@@ -239,7 +239,7 @@ test('Gilded Fate uses reference-matched treasure art and engraved symbol dice',
   assert.match(html,new RegExp(asset.replaceAll('.','\\.')));
   assert.ok(fs.existsSync(path.join(root,asset)),`${name} production icon must exist`);
  }
- assert.match(html,/true3d-dice\.js\?v=20260911R1/);
+ assert.match(html,/true3d-dice\.js\?v=20260915P1/);
  const art=fs.readFileSync(path.join(root,'dice-reference-art.js'),'utf8');
  for(const name of ['relic','oddity','keepsake'])assert.ok(art.includes(`assets/treasure-${name}-gilded-v1.png`));
  assert.match(art,/ctx\.drawImage\(img,/);
@@ -307,7 +307,7 @@ test('Mobile Anchor prevents Safari eviction, rejoins guests and restores full C
  assert.match(board,/webglcontextlost/);
 });
 
-test('Flexible Offering combines rituals, permits discard and keeps monster travel continuous',()=>{
+test('Flexible Offering combines rituals, permits discard and keeps monster travel collision-safe',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const css=fs.readFileSync(path.join(root,'celestial-ui.css'),'utf8');
  const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
@@ -319,7 +319,9 @@ test('Flexible Offering combines rituals, permits discard and keeps monster trav
  assert.match(html,/animateTreasureTransfer\(discard\?'DISCARD':'GIVE'/);
  assert.match(html,/if\(turn\.withOffer\)\{beginOfferPhase\(\);return\}/);
  assert.match(html,/function planMonsterGlide/);
- assert.match(html,/await animateActor\(m\.id,from,final/);
+ assert.match(html,/await animateMonsterRoute\(m,route/);
+ assert.match(html,/webglBoard\.animateActorRoute\(monster\.id,from,route,ms\)/);
+ assert.match(board,/animateActorRoute\(id, from, route, duration = 720\)/);
  assert.match(html,/class="roll-guidance hidden"/);
  assert.match(css,/Flexible Offering/);
  const activation=board.match(/activateJudge\(id\) \{([\s\S]*?)\n  \}/)?.[1]||'';
@@ -332,10 +334,28 @@ test('Six-direction monsters and the physical Offer D20 are wired into the live 
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const dice=fs.readFileSync(path.join(root,'true3d-dice.js'),'utf8');
  assert.deepEqual(balance.HEX_DIRECTION_D6.map(face=>face.edge),['A','B','C','D','E','F']);
- assert.match(html,/function rollHiddenDirection\(\)/);
+ assert.match(html,/function rollHiddenDirection\(monster\)/);
+ assert.match(html,/BALANCE\.favorMonsterDirection\(rolled,scored,Math\.random\)/);
  assert.match(html,/faceMonsterForDirection\(m,direction\)/);
  assert.match(html,/planMonsterGlide\(m,roll\.distance,direction\.edge\)/);
  assert.match(dice,/buildOfferDie\(x, faceLabels=null\)/);
  assert.match(dice,/new THREE\.IcosahedronGeometry\(1\.46,0\)/);
+ assert.match(dice,/kind==='Offer'\|\|kind==='Last Chance'/);
  assert.match(html,/type==='OFFER'\?\[offerSpec\]/);
+});
+
+test('Physical Law stops every actor before occupied hexes and prewarms expensive summons',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
+ assert.match(html,/const actorAt=id=>game\.players\.some\(player=>player\.status==='active'&&player\.pos===id\)\|\|game\.monsters\.some/);
+ assert.match(html,/if\(advance\.stoppedByActor\)\{route\.stoppedByActor=true;break\}/);
+ assert.match(html,/if\(hexOccupied\(step,p,null\)\)\{stoppedByOccupancy=true;break\}/);
+ assert.match(html,/filter\(id=>id!==m\.pos&&!hexOccupied\(id,null,m\)\)/);
+ assert.match(html,/requestAnimationFrame\(\(\)=>requestAnimationFrame\(resolve\)\)/);
+ assert.doesNotMatch(html,/runeClaim\.offsetWidth/);
+ assert.match(html,/dice3D\?\.prepare\(\[lastChanceSpec\],p\.color\)/);
+ assert.match(board,/this\.prewarmedMajorVisual = createMonsterPilot\('major'\)/);
+ assert.match(board,/this\.prewarmedMajorVisual\?\.removeFromParent\(\)/);
+ assert.match(board,/dormant\.userData\.setActive\?\.\(true\)/);
+ assert.match(board,/visual\.userData\.setActive\?\.\(false\)/);
 });
