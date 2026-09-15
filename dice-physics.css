@@ -1,0 +1,5 @@
+/* The tray stays still; only the simulated bodies move. */
+.fate-dice-canvas{height:300px;background:radial-gradient(ellipse at 50% 65%,rgba(55,61,79,.18),transparent 70%);filter:none!important}
+.fate-dice-canvas.casting{animation:none!important}
+.fate-dice-canvas.revealed{filter:none!important}
+@media(max-width:700px){.fate-dice-canvas{height:260px}}

@@ -17,7 +17,7 @@ export function makeRuinStoneMaps(image, type, anisotropy = 4) {
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.drawImage(image, 0, 0, size, size);
   const pixels = ctx.getImageData(0, 0, size, size);
-  const tint = { P: [113, 91, 151], T: [62, 103, 134], G: [147, 153, 174], B: [39, 53, 83], W: [187, 174, 145] }[type];
+  const tint = { P: [66, 55, 76], T: [44, 66, 66], G: [67, 64, 59], B: [49, 46, 45], W: [112, 101, 79] }[type];
   const height = document.createElement('canvas');
   height.width = height.height = size;
   const hctx = height.getContext('2d');
@@ -29,7 +29,7 @@ export function makeRuinStoneMaps(image, type, anisotropy = 4) {
     const nx = (x / size - .5) * 2, nz = (y / size - .5) * 2;
     const edgeDistance = Math.max(Math.abs(nx) / .866, Math.abs(.5 * nx + .866 * nz) / .866, Math.abs(.5 * nx - .866 * nz) / .866);
     const edgeWear = .72 + .28 * Math.min(1, Math.max(0, (1 - edgeDistance) / .14));
-    const value = Math.max(.45, .92 + (grey - 139) / 290 + cloud) * edgeWear;
+    const value = Math.max(.45, .92 + (grey - 139) / 120 + cloud) * edgeWear;
     for (let c = 0; c < 3; c++) {
       pixels.data[i + c] = tint[c] * value;
       relief.data[i + c] = 100 + grey * .34 + cloud * 40;
@@ -39,14 +39,12 @@ export function makeRuinStoneMaps(image, type, anisotropy = 4) {
   ctx.putImageData(pixels, 0, 0);
   hctx.putImageData(relief, 0, 0);
   const rand = randomFor(7823); // Same fractures under every network color.
-  ctx.save(); hctx.save();
-  ctx.scale(size / 512, size / 512); hctx.scale(size / 512, size / 512);
   const stroke = (target, points, color, width, offset = 0) => {
     target.beginPath();
     points.forEach(([x, y], i) => i ? target.lineTo(x + offset, y + offset) : target.moveTo(x + offset, y + offset));
     target.strokeStyle = color; target.lineWidth = width; target.lineJoin = 'round'; target.stroke();
   };
-  for (let crack = 0; crack < 3; crack++) {
+  for (let crack = 0; crack < 5; crack++) {
     const angle = crack / 5 * Math.PI * 2 + .35;
     let x = 256 + Math.sin(angle) * 285, y = 256 + Math.cos(angle) * 285;
     const points = [[x, y]];
@@ -66,45 +64,14 @@ export function makeRuinStoneMaps(image, type, anisotropy = 4) {
       stroke(hctx, branch, '#555555', 1.6);
     }
   }
-  ctx.restore(); hctx.restore();
   // Sparse mineral flecks: baked details, not a particle or mesh per speck.
   for (let i = 0; i < 220; i++) {
     const x = rand() * size, y = rand() * size, radius = .35 + rand() * 1.5;
     ctx.fillStyle = i % 4 ? 'rgba(15,20,22,.24)' : 'rgba(196,170,119,.25)';
     ctx.fillRect(x, y, radius * 1.8, radius);
   }
-  // Baked gilt inlays follow the real hex UVs; no extra mesh or hit target.
-  ctx.save(); ctx.scale(size / 512, size / 512);
-  ctx.strokeStyle = type === 'B' ? 'rgba(217,182,112,.42)' : 'rgba(228,197,139,.68)';
-  ctx.fillStyle = 'rgba(232,201,150,.65)'; ctx.lineWidth = 2.6;
-  ctx.beginPath();
-  for (let i = 0; i <= 6; i++) {
-    const angle = i * Math.PI / 3, x = 256 + Math.sin(angle) * 238, y = 256 + Math.cos(angle) * 238;
-    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-  }
-  ctx.stroke();
-  if (type !== 'B') {
-    ctx.translate(256, 256); ctx.lineWidth = 2;
-    if (type === 'G') {
-      ctx.beginPath(); ctx.arc(0, 0, 36, .55, 5.1);
-      ctx.quadraticCurveTo(-18, -3, Math.cos(.55) * 36, Math.sin(.55) * 36); ctx.fill();
-    } else {
-      ctx.beginPath();
-      for (let i = 0; i <= 16; i++) {
-        const angle = i * Math.PI / 8, r = i % 2 ? 13 : (i % 4 ? 36 : 63);
-        i ? ctx.lineTo(Math.sin(angle) * r, Math.cos(angle) * r) : ctx.moveTo(0, r);
-      }
-      ctx.stroke();
-      if (type === 'T' || type === 'W') { ctx.beginPath(); ctx.arc(0, 0, 46, 0, Math.PI * 2); ctx.stroke(); }
-    }
-    for (let i = 0; i < 6; i++) {
-      const a = i * Math.PI / 3;
-      ctx.beginPath(); ctx.moveTo(Math.sin(a) * 87, Math.cos(a) * 87);
-      ctx.lineTo(Math.sin(a) * 113, Math.cos(a) * 113); ctx.stroke();
-      ctx.beginPath(); ctx.arc(Math.sin(a) * 124, Math.cos(a) * 124, 3, 0, Math.PI * 2); ctx.fill();
-    }
-  }
-  ctx.restore();
+  ctx.strokeStyle = 'rgba(193,175,136,.13)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(272, 244, 109, .2, 1.7); ctx.stroke();
   const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace;
   const bump = new THREE.CanvasTexture(height);
   for (const texture of [map, bump]) {
@@ -256,44 +223,7 @@ export function makeRuinFoundation(cells, worldFor, radius, maps) {
     }
   }
   chains.count=chainIndex;chains.instanceMatrix.needsUpdate=true;chains.castShadow=false;chains.receiveShadow=true;root.add(chains);
-  addCelestialBanners(root, ordered, worldFor, mobile);
   return root;
-}
-
-function addCelestialBanners(root, sites, worldFor, mobile) {
-  // Banners hang outside blocked perimeter cells, below the playing surface.
-  // Three instanced draws keep their cost independent of the number of flags.
-  const count = Math.min(sites.length, mobile ? 8 : 14);
-  if (!count) return;
-  const shape = new THREE.Shape();
-  shape.moveTo(-.46, 0); shape.lineTo(.46, 0); shape.lineTo(.43, -1.65);
-  shape.lineTo(0, -2.2); shape.lineTo(-.43, -1.65); shape.closePath();
-  const geometry = new THREE.ShapeGeometry(shape, 1);
-  const trim = new THREE.MeshStandardMaterial({ color: 0xc9a86f, roughness: .82, side: THREE.DoubleSide });
-  const fabric = new THREE.MeshStandardMaterial({ color: 0x233557, roughness: 1, side: THREE.DoubleSide });
-  const rims = new THREE.InstancedMesh(geometry, trim, count);
-  const cloth = new THREE.InstancedMesh(geometry, fabric, count);
-  const crescent = new THREE.Shape();
-  const angle = Math.acos(.375);
-  crescent.absarc(0, 0, .16, angle, Math.PI * 2 - angle, false);
-  crescent.absarc(.12, 0, .16, Math.PI + angle, Math.PI - angle, true);
-  crescent.closePath();
-  const moons = new THREE.InstancedMesh(new THREE.ShapeGeometry(crescent, 12), trim, count);
-  const dummy = new THREE.Object3D();
-  for (let i = 0; i < count; i++) {
-    const p = worldFor(`${sites[Math.floor(i * sites.length / count)].q},${sites[Math.floor(i * sites.length / count)].r}`);
-    const angle = Math.atan2(p.x, p.z), nx = Math.sin(angle), nz = Math.cos(angle);
-    dummy.position.set(p.x + nx * .8, -.24, p.z + nz * .8);
-    dummy.rotation.set(0, angle, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); rims.setMatrixAt(i, dummy.matrix);
-    dummy.position.y -= .055; dummy.position.x += nx * .015; dummy.position.z += nz * .015;
-    dummy.scale.set(.90, .94, 1); dummy.updateMatrix(); cloth.setMatrixAt(i, dummy.matrix);
-    dummy.position.y -= .77; dummy.position.x += nx * .015; dummy.position.z += nz * .015;
-    dummy.scale.setScalar(1.2); dummy.updateMatrix(); moons.setMatrixAt(i, dummy.matrix);
-  }
-  for (const mesh of [rims, cloth, moons]) {
-    mesh.name = 'Celestial perimeter banners'; mesh.raycast = () => {};
-    mesh.receiveShadow = true; root.add(mesh);
-  }
 }
 
 export function makeContactShadow() {

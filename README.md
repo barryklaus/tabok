@@ -1,14 +1,18 @@
-## Painted Sanctuary — on v1.5.4 P2
-
-The board now uses hand-painted lavender stone, distinct purple/blue/grey routes, gold celestial inlays, and cel-shaded light bands. Indigo-and-gold banners hang below the blocked perimeter. A locally hosted painted cloud sea, floating ruins, and violet eclipse replace the galaxy sky, with a blue fallback if the artwork cannot load. The interface follows the same ink-blue and pale-gold palette.
-
-The v1.5.4 P2 Physical Law changes are retained in full, including collision-safe movement, biased monster direction rolls, the physical Last Chance D20, and prewarmed summons. Playable geometry, movement rules, multiplayer state, and personal ambient controls are unchanged by the artwork update. The new artwork totals approximately 630 KB; banners use three instanced draws. Guardian materials retain their original references so awakening and damage effects continue to animate.
-
-Validation: existing game tests, all playable-cell picking checks, material animation preservation, finite banner geometry, and local asset references. No browser visual test was performed.
-
 # TABOK — The Crossing
 
 Version: **v1.5.4 — Physical Law · 2026.09.15.P2**
+
+## Orbital Dice — 2026-09-15
+
+Restores the pre-Painted-Sanctuary board and interface on the complete v1.5.4 P2 rules. The background is now a slowly rotating, layered star sphere with original locally generated star maps. Reduced-motion preferences stop its rotation.
+
+Dice use a locally hosted Cannon-es 0.20.0 simulation for gravity, collisions, friction, and flat settling. Movement dice have rounded ceramic bodies and actual recessed pips; the symbol dice and D20 use matching ivory faces. Offering and Last Chance still share the same D20. The tray stays still and dice stay in bounds.
+
+The rules choose the result before presentation. Each simulated throw is recorded, then a constant shape-preserving rotation maps its face labels to that result from the first frame. There is no final-frame snap and no change to probabilities or multiplayer authority. If a throw cannot settle after bounded retries, the chosen result is shown immediately so the turn can continue. Replacing or hiding a roll cancels its animation safely.
+
+Validation: 58 automated checks pass, including every D6/D20 face, mixed-dice collisions, flat settling, fixed-step repeatability, cancellation, reduced motion, pip geometry, and P2 regressions. Local asset references and the correct preview folder were verified. Browser visual testing was not performed.
+
+References: [Codrops dice demo](https://tympanus.net/Tutorials/DiceRoller/), [Codrops tutorial](https://tympanus.net/codrops/2023/01/25/crafting-a-dice-roller-with-three-js-and-cannon-es/), and [g7skim’s WebGL space background](https://codepen.io/g7skim/pen/WNbwOoX). The integration and star textures are original; Cannon-es is included with its MIT license in `vendor/cannon-es.LICENSE.txt`.
 
 ## v1.5.4 — Physical Law
 

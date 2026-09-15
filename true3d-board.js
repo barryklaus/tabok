@@ -1,12 +1,11 @@
 import * as THREE from 'three';
-import { celestialMaterial, shadeCelestialArchitecture, shadeCelestialSculpture } from './celestial-materials.js?v=20260915A1';
 import { createGuardianStatue } from './guardian-statues.js?v=20260915P1';
-import { createCosmicSanctuary } from './cosmic-sanctuary.js?v=20260915A1';
+import { createCosmicSanctuary } from './cosmic-sanctuary.js?v=20260915D1';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createTravelerPilot } from './character-3d-travelers.js?v=20260907G4';
 import { createMonsterPilot } from './monster-3d-models.js?v=20260911VK1';
 import { PortalCinematics } from './portal-cinematics.js?v=20260908A1';
-import { makeRuinStoneMaps, makeWornHexGeometry, makeRuinFoundation, makeContactShadow } from './ruin-board-art.js?v=20260915A1';
+import { makeRuinStoneMaps, makeWornHexGeometry, makeRuinFoundation, makeContactShadow } from './ruin-board-art.js?v=20260909H2';
 
 import { ARENA_LIGHTING, DEFAULT_AMBIENT_LEVEL, normalizeAmbientLevel, arenaFillAt, makeLightPool, makePlayerAura } from './arena-lighting.js?v=20260911L2';
 
@@ -16,8 +15,8 @@ const PORTAL_R = 2.08;
 const COLORS = { P: 0xa979c4, T: 0x55a8a0, G: 0xb1aa9c, B: 0x211d19, W: 0xe0c68e };
 // Keep the grey network at the same perceived value as purple and teal even
 // when it catches the moon and temple lights.
-const TILE_TINTS = { P: 0xffffff, T: 0xffffff, G: 0xffffff, B: 0xffffff, W: 0xffffff };
-const TILE_SIDES = { P: 0x666083, T: 0x496781, G: 0x717d9b, B: 0x343e60, W: 0xb8a57e };
+const TILE_TINTS = { P: 0xffffff, T: 0xffffff, G: 0xddd8d0, B: 0xc4bfb6, W: 0xffffff };
+const TILE_SIDES = { P: 0x716779, T: 0x5a7375, G: 0x77736c, B: 0x4a4542, W: 0xa29372 };
 const PORTAL_LOOKS = {
   idle: [38, 1, new THREE.Color(0x53129a), new THREE.Color(0xd44dff)],
   rejected: [46, 1.28, new THREE.Color(0x8f174f), new THREE.Color(0xff4fb7)],
@@ -379,7 +378,7 @@ export class TabokTrue3DBoard {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x050305);
-    this.scene.fog = new THREE.FogExp2(0x9ba8d5, .006);
+    this.scene.fog = new THREE.FogExp2(0x070508, .014);
     this.camera = new THREE.PerspectiveCamera(42, 1, .1, 90);
     this.camera.position.set(0, 18.5, 23.5);
 
@@ -487,7 +486,7 @@ export class TabokTrue3DBoard {
   async loadTextures() {
     const sources = {
       P: 'assets/astral-obsidian-v2.jpg', T: 'assets/astral-teal-v2.jpg',
-      G: 'assets/painted-stone-v1.jpg', wall: 'assets/painted-stone-v1.jpg'
+      G: 'assets/astral-limestone-v2.jpg', wall: 'assets/ruin-wall-texture.png'
     };
     this.textures = {};
     await Promise.all(Object.entries(sources).map(async ([key, url]) => { this.textures[key] = await this.loadTexture(url); }));
@@ -528,7 +527,7 @@ export class TabokTrue3DBoard {
     this.moonLight.shadow.normalBias = .035;
     this.scene.add(this.moonLight);
 
-    this.rimLight = new THREE.DirectionalLight(0x879cff, ARENA_LIGHTING.rim);
+    this.rimLight = new THREE.DirectionalLight(0x6f3696, ARENA_LIGHTING.rim);
     this.rimLight.position.set(11, 8, -13);
     this.scene.add(this.rimLight);
 
@@ -573,7 +572,6 @@ export class TabokTrue3DBoard {
 
   makeGround() {
     this.ruinFoundation = makeRuinFoundation(this.config.cells, worldFor, HEX_RADIUS, this.ruinStoneMaps.G);
-    shadeCelestialArchitecture(this.ruinFoundation);
     this.scene.add(this.ruinFoundation);
 
     this.faultlineMaterial = new THREE.ShaderMaterial({
@@ -604,9 +602,7 @@ export class TabokTrue3DBoard {
   }
 
   makeJudgeModel(index = 0, active = false) {
-    const guardian = createGuardianStatue(index, active);
-    shadeCelestialSculpture(guardian);
-    return guardian;
+    return createGuardianStatue(index, active);
   }
 
   makeDormantJudges() {
@@ -629,11 +625,11 @@ export class TabokTrue3DBoard {
     const sideMaterials = {};
     for (const type of ['P', 'T', 'G', 'B', 'W']) {
       const maps = this.ruinStoneMaps[type];
-      topMaterials[type] = celestialMaterial({
-        map: maps.map, bumpMap: maps.bump, bumpScale: .014,
+      topMaterials[type] = new THREE.MeshStandardMaterial({
+        map: maps.map, bumpMap: maps.bump, bumpScale: .045,
         color: TILE_TINTS[type], roughness: .76, metalness: .06
       });
-      sideMaterials[type] = celestialMaterial({
+      sideMaterials[type] = new THREE.MeshStandardMaterial({
         map: this.ruinStoneMaps.G.map, bumpMap: this.ruinStoneMaps.G.bump, bumpScale: .035,
         color: TILE_SIDES[type], roughness: .93, metalness: .015
       });

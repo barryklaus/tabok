@@ -130,11 +130,11 @@
   <link rel="stylesheet" href="ambient-controls.css?v=20260911L2">
   <link rel="stylesheet" href="trial-or-die.css?v=20260911T2">
   <script src="portal-events.js?v=20260907G4"></script>
-  <link rel="stylesheet" href="painted-sanctuary.css?v=20260915A1">
+  <link rel="stylesheet" href="dice-physics.css?v=20260915D1">
 </head>
 <body>
   <div class="shell">
-    <header class="top"><div class="brand"><strong>TABOK</strong><span>The Crossing · The Balance</span><small class="build-label">v1.5.4 PHYSICAL LAW · Build 2026.09.15.P2 · Painted Sanctuary</small></div><small class="perf-meter" id="perfMeter" title="Live animation frame rate">FPS —</small><div class="network-pill" id="networkPill">OFFLINE</div><div class="top-status"><b id="roundTop">New expedition</b><span id="phaseTop" class="webgl-status">Raising the 3D ruins…</span></div><button class="new-game" id="newGame">Room</button></header>
+    <header class="top"><div class="brand"><strong>TABOK</strong><span>The Crossing · The Balance</span><small class="build-label">v1.5.4 PHYSICAL LAW · Build 2026.09.15.P2 · Orbital Dice</small></div><small class="perf-meter" id="perfMeter" title="Live animation frame rate">FPS —</small><div class="network-pill" id="networkPill">OFFLINE</div><div class="top-status"><b id="roundTop">New expedition</b><span id="phaseTop" class="webgl-status">Raising the 3D ruins…</span></div><button class="new-game" id="newGame">Room</button></header>
     <main class="layout">
       <aside class="guide" aria-label="How to play TABOK">
         <div class="character-preview" id="characterPreview"><div class="preview-caption"><strong>Choose a Traveler</strong><span>Live sculpted presence</span></div></div>
@@ -394,7 +394,7 @@
     async function initGPUBoard(){
       const status=document.getElementById('phaseTop');
       try{
-        const{TabokTrue3DBoard}=await import('./true3d-board.js?v=20260915P2A1'),cells3D=[];
+        const{TabokTrue3DBoard}=await import('./true3d-board.js?v=20260915D1'),cells3D=[];
         Object.entries(COLUMNS).forEach(([qValue,col])=>{const q=Number(qValue);[...col.cells].forEach((type,i)=>cells3D.push({q,r:col.r0+i,type}))});
         webglBoard=new TabokTrue3DBoard(document.getElementById('webglBoard'),{
           cells:cells3D,
@@ -410,7 +410,7 @@
         const reset=document.getElementById('reset3DCamera'),buttons=document.createElement('div'),left=document.createElement('button'),right=document.createElement('button');
         buttons.className='true3d-hud-buttons';left.type=right.type='button';left.id='orbit3DLeft';right.id='orbit3DRight';left.textContent='↶';right.textContent='↷';left.title='Rotate camera left';right.title='Rotate camera right';reset.before(left);reset.after(right);reset.parentElement.classList.add('true3d-hud-controls');
         reset.onclick=()=>webglBoard.resetCamera();left.onclick=()=>webglBoard.orbitCamera(-1);right.onclick=()=>webglBoard.orbitCamera(1);
-        try{const{TabokDice3D}=await import('./true3d-dice.js?v=20260915P1');dice3D=new TabokDice3D(els.turnRollDice)}catch(diceError){console.warn('TABOK physical dice unavailable; using the flat dice fallback.',diceError)}
+        try{const{TabokDice3D}=await import('./true3d-dice.js?v=20260915D1');dice3D=new TabokDice3D(els.turnRollDice)}catch(diceError){console.warn('TABOK physical dice unavailable; using the flat dice fallback.',diceError)}
         const cameraCanvas=document.getElementById('webglBoard'),cameraHelp=document.querySelector('.true3d-hud>span');
         cameraCanvas.setAttribute('aria-label','Interactive 3D TABOK board. Hold left mouse and drag to orbit. Hold right mouse and drag to move the camera. Use the wheel or pinch to zoom.');
         if(cameraHelp)cameraHelp.innerHTML='<b>3D CAMERA</b> Left-drag to orbit · Right-drag to move · Wheel/pinch to zoom';
