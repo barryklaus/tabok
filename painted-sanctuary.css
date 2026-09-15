@@ -1,0 +1,32 @@
+/* Celestial ruins: ink-blue panels, pale gold rules, violet light. */
+:root{
+  --cel-ink:#11172c;--cel-panel:rgba(17,23,44,.94);--cel-panel-soft:rgba(29,38,66,.74);
+  --cel-gold:#ceb17a;--cel-bright:#f2dfb2;--cel-dim:#a4aec8;
+  --cel-faint:rgba(206,177,122,.2);--cel-line:rgba(206,177,122,.48);
+}
+html,body,.shell,.layout{background:#121a31!important;color:#d7def0}
+.top{background:linear-gradient(180deg,#283354,#161e36)!important}
+.top::after,.turn-die-option::after{background:#19223b!important}
+.brand strong{color:#f4dfad!important;text-shadow:0 2px 0 #141d35,0 0 20px #b998ed35!important}
+.brand span,.brand small,.build-label{color:#a9b6d2!important}
+.guide,.turn,.side{background:linear-gradient(130deg,rgba(41,51,83,.97),rgba(17,24,45,.97))!important}
+.stage,.board-frame{background:#697dad!important}
+.character-preview{background:radial-gradient(ellipse at 50% 35%,#71648b55,transparent 64%),#1a2440!important}
+.guide-intro,.guide-card,.guide-foot,.turn-head,.event,.traveler-roster,.side-ledger,.history,.global-chat{background:transparent!important}
+.guide-card span,.guide-intro p,.guide-foot,.history,.event,.turn-head small{color:#b9c4dd!important}
+.dialog,.turn-roll-dialog,.actor-tooltip,.actor-speech-bubble{background:linear-gradient(145deg,#2c3655,#141c34 76%)!important;color:#dee4f3!important;border-color:var(--cel-line)!important}
+.overlay,.turn-roll-overlay{background:rgba(10,16,34,.72)!important}
+.top button,.network-pill,.perf-meter,button,.turn-choice-grid button,.turn-die-option{background-color:#1c2947!important;color:var(--cel-bright)}
+button:hover:not(:disabled){border-color:#e8d8af!important;background-color:#334266!important}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #ceb4ff!important;outline-offset:3px}
+input,select,textarea{background:#141e36!important;color:#e0e7f8!important;border-color:#7f8ca8!important}
+.true3d-hud{color:#e8ebfb!important;text-shadow:0 1px 3px #172342}
+.true3d-hud button{background:rgba(21,31,56,.86)!important}
+.turn-die-option span,.turn-die-option small,.roll-guidance{color:#b9c4dd!important}
+.actor-speech-bubble::after{background:#1b2540!important}
+.account,.player,.controls{color:#d7def0}
+/* Keep route colors distinct in the compatibility view as well. */
+#board .playable.purple{fill:#746099!important;stroke:#d0b785!important}
+#board .playable.teal{fill:#426c88!important;stroke:#c4b484!important}
+#board .playable.grey{fill:#a0a6bb!important;stroke:#d6bf92!important}
+#board .board-base{fill:#263654!important;stroke:#8491b3!important}

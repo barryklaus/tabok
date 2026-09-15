@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { celestialMaterial } from './celestial-materials.js?v=20260915A1';
 
 function canvasTexture(canvas, colorSpace = THREE.SRGBColorSpace) {
   const texture = new THREE.CanvasTexture(canvas);
@@ -13,13 +14,13 @@ function makeDistantField(random, mobile) {
   const canvas = document.createElement('canvas');
   canvas.width = mobile ? 1024 : 2048; canvas.height = mobile ? 512 : 1024;
   const context = canvas.getContext('2d');
-  context.fillStyle = '#020306'; context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = '#788bb5'; context.fillRect(0, 0, canvas.width, canvas.height);
   // Unresolved lights are baked into the one background texture: no draw cost.
   const image = context.getImageData(0, 0, canvas.width, canvas.height), data = image.data;
   for (let index = 0; index < data.length; index += 4) {
     const noise = random(), star = noise > .9965 ? 16 + random() * 46 : random() * 3.2;
-    data[index] = 2 + star * .78; data[index + 1] = 3 + star * .84;
-    data[index + 2] = 6 + star; data[index + 3] = 255;
+    data[index] = 113 + star * .78; data[index + 1] = 131 + star * .84;
+    data[index + 2] = 177 + star; data[index + 3] = 255;
   }
   context.putImageData(image, 0, 0);
   const texture = canvasTexture(canvas); texture.mapping = THREE.EquirectangularReflectionMapping;
@@ -56,15 +57,15 @@ function makeCloseStar() {
   return canvasTexture(canvas);
 }
 
-// One locally hosted galaxy panorama, two star depths and instanced ruins.
+// One locally hosted painted cloud panorama, two star depths and instanced ruins.
 // The baked star field remains a fallback if the artwork cannot load.
 export function createCosmicSanctuary(scene, stoneMaps) {
   let seed=71943;
   const random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
   const mobile=matchMedia('(max-width: 900px), (pointer: coarse)').matches;
   const distant=makeDistantField(random,mobile);scene.background=distant;scene.backgroundIntensity=.82;
-  // Mirrored sky sectors retain fine detail at the board camera's narrow field
-  // of view. An even repeat count closes the longitude seam in every orbit.
+  // Mirrored longitude closes the wrap without a hard edge. The vertical crop
+  // places the cloud horizon behind the board at the default elevated camera.
   const skyMaterial=new THREE.ShaderMaterial({
     uniforms:{uGalaxy:{value:null}},
     vertexShader:`varying vec3 vDirection;
@@ -77,22 +78,23 @@ export function createCosmicSanctuary(scene, stoneMaps) {
       void main(){
         vec3 d=normalize(vDirection);
         vec2 uv=vec2(atan(d.z,d.x)/6.2831853+.5,asin(clamp(d.y,-1.,1.))/3.14159265+.5);
-        vec3 nebula=texture2D(uGalaxy,uv*2.).rgb;
+        vec2 paintedUv=vec2(uv.x*2.,clamp(uv.y*1.8+.13,.015,.985));
+        vec3 nebula=texture2D(uGalaxy,paintedUv).rgb;
         float pole=smoothstep(.96,.995,abs(d.y));
-        gl_FragColor=vec4(mix(nebula*.55,vec3(.001,.002,.005),pole),1.);
+        gl_FragColor=vec4(mix(nebula*.92,vec3(.24,.30,.47),pole),1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,
     side:THREE.BackSide,depthWrite:false,depthTest:false,fog:false
   });
   const sky=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),skyMaterial);
-  sky.name='Nebula sky';sky.frustumCulled=false;sky.renderOrder=-100;sky.visible=false;sky.raycast=()=>{};
-  sky.rotation.set(.15,.6,-.22);scene.add(sky);
+  sky.name='Painted cloud sanctuary';sky.frustumCulled=false;sky.renderOrder=-100;sky.visible=false;sky.raycast=()=>{};
+  sky.rotation.set(0,2.765,0);scene.add(sky);
   let disposed=false;
-  const galaxy=new THREE.TextureLoader().load(new URL('./assets/galaxy-sanctuary-v1.jpg',import.meta.url).href,texture=>{
+  const galaxy=new THREE.TextureLoader().load(new URL('./assets/celestial-sky-v1.jpg',import.meta.url).href,texture=>{
     if(disposed){texture.dispose();return}
     texture.colorSpace=THREE.SRGBColorSpace;
-    texture.wrapS=texture.wrapT=THREE.MirroredRepeatWrapping;
+    texture.wrapS=THREE.MirroredRepeatWrapping;texture.wrapT=THREE.ClampToEdgeWrapping;
     texture.minFilter=THREE.LinearMipmapLinearFilter;
     skyMaterial.uniforms.uGalaxy.value=texture;sky.visible=true;
   },undefined,()=>{/* Keep the lightweight star field if the image is unavailable. */});
@@ -112,7 +114,7 @@ export function createCosmicSanctuary(scene, stoneMaps) {
     star.position.set(Math.sin(angle)*radius,height,Math.cos(angle)*radius);star.scale.set(size,size,1);star.renderOrder=-10;root.add(star);closeStars.push(star);
   }
 
-  const stone=new THREE.MeshStandardMaterial({map:stoneMaps.map,bumpMap:stoneMaps.bump,bumpScale:.08,color:0x91858b,roughness:.96,metalness:0});
+  const stone=celestialMaterial({map:stoneMaps.map,bumpMap:stoneMaps.bump,bumpScale:.018,color:0x7585af});
   const object=new THREE.Object3D();
   const rocks=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),stone,84),motion=[];
   for(let index=0;index<84;index++){

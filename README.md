@@ -1,3 +1,11 @@
+## Painted Sanctuary — on v1.5.4 P2
+
+The board now uses hand-painted lavender stone, distinct purple/blue/grey routes, gold celestial inlays, and cel-shaded light bands. Indigo-and-gold banners hang below the blocked perimeter. A locally hosted painted cloud sea, floating ruins, and violet eclipse replace the galaxy sky, with a blue fallback if the artwork cannot load. The interface follows the same ink-blue and pale-gold palette.
+
+The v1.5.4 P2 Physical Law changes are retained in full, including collision-safe movement, biased monster direction rolls, the physical Last Chance D20, and prewarmed summons. Playable geometry, movement rules, multiplayer state, and personal ambient controls are unchanged by the artwork update. The new artwork totals approximately 630 KB; banners use three instanced draws. Guardian materials retain their original references so awakening and damage effects continue to animate.
+
+Validation: existing game tests, all playable-cell picking checks, material animation preservation, finite banner geometry, and local asset references. No browser visual test was performed.
+
 # TABOK — The Crossing
 
 Version: **v1.5.4 — Physical Law · 2026.09.15.P2**
