@@ -1,6 +1,12 @@
 # TABOK — The Crossing
 
-Version: **v1.5.6 — Earned Dice · 2026.09.16.D2**
+Version: **v1.5.7 — Solid Passage · 2026.09.16.P3**
+
+## v1.5.7 — Solid Passage
+
+- Every player movement step validates adjacency and occupancy before animation and before committing its position. Human and CPU movement share the same guard.
+- Phase can no longer plan through an occupied hex. Legacy Riftwalk follows an open route instead of sliding directly across actors; legacy Soul Exchange cannot swap into an occupied hex.
+- Portal entry and rejection destinations also check both Travelers and monsters. A route interrupted by an occupied hex ends at the last open hex.
 
 ## v1.5.6 — Earned Dice
 
