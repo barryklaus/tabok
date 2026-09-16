@@ -8,6 +8,19 @@ Version: **v1.5.5 — Choose Your Dice · 2026.09.16.D1**
 - Only selected dice roll and contribute results. Rune can now be selected independently; Movement supplies its base distance when included. Treasure resolves after any movement.
 - A brief 3D spin and bounce settles into a readable result, then returns to the tray. No camera movement or particles accompany the roll.
 - Open `dice-selection-preview.html` for a repeatable interaction preview.
+- Combined with the latest finer-star background and physical D20 rendering from Orbital Dice; the three-dice selector uses its own lightweight, fast animation. All 60 automated checks pass after integration.
+
+## Orbital Dice — 2026-09-15
+
+Restores the pre-Painted-Sanctuary board and interface on the complete v1.5.4 P2 rules. The background is now a slowly rotating, layered star sphere with original locally generated star maps. Reduced-motion preferences stop its rotation.
+
+Dice use a locally hosted Cannon-es 0.20.0 simulation for gravity, collisions, friction, and flat settling. Movement dice have rounded ceramic bodies and actual recessed pips; the symbol dice and D20 use matching ivory faces. Offering and Last Chance still share the same D20. The tray stays still and dice stay in bounds.
+
+The rules choose the result before presentation. Each simulated throw is recorded, then a constant shape-preserving rotation maps its face labels to that result from the first frame. There is no final-frame snap and no change to probabilities or multiplayer authority. If a throw cannot settle after bounded retries, the chosen result is shown immediately so the turn can continue. Replacing or hiding a roll cancels its animation safely.
+
+Validation: 58 automated checks pass, including every D6/D20 face, mixed-dice collisions, flat settling, fixed-step repeatability, cancellation, reduced motion, pip geometry, and P2 regressions. Local asset references and the correct preview folder were verified. Browser visual testing was not performed.
+
+References: [Codrops dice demo](https://tympanus.net/Tutorials/DiceRoller/), [Codrops tutorial](https://tympanus.net/codrops/2023/01/25/crafting-a-dice-roller-with-three-js-and-cannon-es/), and [g7skim’s WebGL space background](https://codepen.io/g7skim/pen/WNbwOoX). The integration and star textures are original; Cannon-es is included with its MIT license in `vendor/cannon-es.LICENSE.txt`.
 
 ## v1.5.4 — Physical Law
 

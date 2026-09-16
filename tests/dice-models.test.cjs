@@ -5,7 +5,8 @@ const rounded=fs.readFileSync(path.join(root,'vendor/addons/geometries/RoundedBo
 // The browser checks texture painting. These tests exercise the production
 // geometry, face alignment and cache with lightweight canvas-free textures.
 const art=data(`import * as THREE from '${threeURL}';export const DICE_PALETTES={};export async function preloadTreasureIcons(){};export function faceTexture(){return {texture:new THREE.Texture(),emissiveMap:new THREE.Texture()}};export const offerFaceTexture=faceTexture;`);
-const src=fs.readFileSync(path.join(root,'true3d-dice.js'),'utf8').replace(/from 'three'/g,`from '${threeURL}'`).replace(/from 'three\/addons\/geometries\/RoundedBoxGeometry.js'/,`from '${data(rounded)}'`).replace(/from '\.\/dice-reference-art.js[^']*'/,`from '${art}'`);
+const physics=data(fs.readFileSync(path.join(root,'dice-physics.js'),'utf8').replace(/from 'three'/g,`from '${threeURL}'`).replace(/from '\.\/vendor\/cannon-es.js'/,`from '${pathToFileURL(path.join(root,'vendor/cannon-es.js')).href}'`));
+const src=fs.readFileSync(path.join(root,'true3d-dice.js'),'utf8').replace(/from 'three'/g,`from '${threeURL}'`).replace(/from 'three\/addons\/geometries\/RoundedBoxGeometry.js'/,`from '${data(rounded)}'`).replace(/from '\.\/dice-reference-art.js[^']*'/,`from '${art}'`).replace(/from '\.\/dice-physics.js[^']*'/,`from '${physics}'`);
 const ready=Promise.all([import(data(src)),import(threeURL),import(data(rounded))]);
 async function board(){const[{TabokDice3D},THREE,{RoundedBoxGeometry}]=await ready;const d=Object.create(TabokDice3D.prototype);d.dieResources=new Map();d.scene=new THREE.Scene();d.dice=[];d.dieGeometry=new RoundedBoxGeometry(2.05,2.05,2.05,4,.115);return{d,THREE};}
 test('all 20 numbered triangles face outward and every forced D20 result lands face up',async()=>{
@@ -21,4 +22,31 @@ test('dice redesign preserves the treasure odds and reuses ready resources',asyn
  const first=d.buildOfferDie(0),resource=d.dieResources.get('Offer|'+first.userData.labels.join(','));d.clearDice();const second=d.buildOfferDie(0);assert.equal(d.dieResources.get('Offer|'+second.userData.labels.join(',')),resource);assert.equal(first.children[0].geometry,second.children[0].geometry);
  d.clearDice();const life=d.buildDice('Last Chance',0,Array.from({length:20},(_,index)=>index+1));assert.equal(life.userData.kind,'Offer');assert.deepEqual(life.userData.labels,first.userData.labels);assert.equal(life.children[0].geometry,first.children[0].geometry);
  assert.equal(d.supports([{label:'Movement'}]),true);assert.equal(d.supports([{label:'Last Chance'}]),true);assert.equal(d.supports([{label:'Direction'}]),false);assert.equal(d.supports([{label:'Treasure',rolling:false}]),false);
+});
+
+
+test('Movement dice have recessed pips and keep their geometry cached',async()=>{
+ const{d}=await board();const movement=d.buildDice('Movement',0),g=movement.geometry,p=g.attributes.position;
+ const faceStart=2*37*37,center=faceStart+18*37+18;
+ assert.ok(p.getY(center)<.98,'the three-pip upward face has a physical center cavity');
+ for(const key of ['position','normal'])for(const value of g.attributes[key].array)assert.ok(Number.isFinite(value));
+ d.clearDice();assert.equal(d.buildDice('Movement',0).geometry,g);
+});
+
+test('a replacement roll and hide cancel pending rolls without stale pose updates',async()=>{
+ const{d}=await board();d.buildDice('Movement',0);d.prepare=()=>true;d.render=()=>{};
+ d.canvas={classList:{add(){},remove(){}}};d.animationGeneration=0;d.pendingResolve=null;
+ let id=0;const frames=new Map();
+ global.requestAnimationFrame=callback=>{frames.set(++id,callback);return id};global.cancelAnimationFrame=handle=>frames.delete(handle);global.matchMedia=()=>({matches:false});
+ const first=d.cast([{label:'Movement',result:'2'}]);const stale=[...frames.values()][0];
+ const second=d.cast([{label:'Movement',result:'6'}]);assert.equal(await first,false);
+ d.hide();assert.equal(await second,false);assert.equal(frames.size,0);
+ const before=d.dice[0].position.clone();stale(performance.now()+9999);assert.ok(d.dice[0].position.equals(before));
+ const last=d.cast([{label:'Movement',result:'4'}]);[...frames.values()][0](performance.now()+9999);assert.equal(await last,true);assert.equal(d.pendingResolve,null);
+});
+
+test('reduced motion resolves the correct die in one frame',async()=>{
+ const{d}=await board();d.buildDice('Movement',0);d.prepare=()=>true;d.render=()=>{};d.canvas={classList:{add(){},remove(){}}};d.animationGeneration=0;
+ let callback;global.requestAnimationFrame=fn=>{callback=fn;return 1};global.cancelAnimationFrame=()=>{};global.matchMedia=()=>({matches:true});
+ const done=d.cast([{label:'Movement',result:'3'}],2000);callback(performance.now());assert.equal(await done,true);assert.equal(d.dice[0].userData.resultFace,2);
 });

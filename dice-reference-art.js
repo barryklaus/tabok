@@ -97,23 +97,30 @@ function rune(ctx,label,p){
   else if(label==='PLUNDER'){for(let i=0;i<3;i++){const a=i*Math.PI*2/3;const x=256+Math.sin(a)*108,y=256+Math.cos(a)*108;ctx.beginPath();ctx.arc(x,y,18,0,Math.PI*2);ctx.stroke();path(ctx,[[x,y],[256+(x-256)*.25,256+(y-256)*.25]]);ctx.stroke();}star(ctx,256,256,36);}
   else{path(ctx,[[276,129],[185,270],[247,274],[226,383],[327,232],[267,232]],true);ctx.fill();}
 }
-function maps(c){
+function maps(c, ink=false){
   const coarse=typeof matchMedia==='function'&&matchMedia('(max-width:900px), (pointer:coarse)').matches;
   const upload=source=>{if(!coarse)return source;const scaled=document.createElement('canvas');scaled.width=scaled.height=256;scaled.getContext('2d').drawImage(source,0,0,256,256);return scaled;};
   const mask=canvas(),mc=mask.getContext('2d'),pixels=c.getContext('2d').getImageData(0,0,512,512),em=mc.createImageData(512,512);
-  for(let i=0;i<pixels.data.length;i+=4){const light=Math.max(pixels.data[i],pixels.data[i+1],pixels.data[i+2]);const v=Math.max(0,light-87)*1.5;em.data[i]=em.data[i+1]=em.data[i+2]=v;em.data[i+3]=255;}
+  for(let i=0;i<pixels.data.length;i+=4){const light=Math.max(pixels.data[i],pixels.data[i+1],pixels.data[i+2]);const v=ink?Math.max(0,175-light)*1.7:Math.max(0,light-87)*1.5;em.data[i]=em.data[i+1]=em.data[i+2]=v;em.data[i+3]=255;}
   mc.putImageData(em,0,0);
   const texture=new THREE.CanvasTexture(upload(c)),emissiveMap=new THREE.CanvasTexture(upload(mask));
   for(const t of [texture,emissiveMap]){t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;}
   return {texture,emissiveMap};
 }
 export function faceTexture(label,kind,faceIndex=0){
-  const c=canvas(),ctx=c.getContext('2d'),p=DICE_PALETTES[kind]||DICE_PALETTES.Movement;
-  stone(ctx,p,73+faceIndex*19);ornament(ctx,p);
+  const c=canvas(),ctx=c.getContext('2d'),base=DICE_PALETTES[kind]||DICE_PALETTES.Movement;
+  const ink={Movement:'#202634',Treasure:'#80632f',Rune:'#684b8c',Action:'#316768'}[kind]||'#303240';
+  const p={...base,light:ink,metal:ink,symbol:ink};
+  ctx.fillStyle='#e8e4df';ctx.fillRect(0,0,512,512);
   if(kind==='Movement'){
-    ctx.font='252px Georgia, "Times New Roman", serif';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='#08060d';ctx.fillText(String(label),259,280);ctx.fillStyle=metallic(ctx,{...p,metal:p.symbol});ctx.fillText(String(label),256,274);
-    ctx.strokeStyle=p.light;ctx.lineWidth=.8;ctx.strokeText(String(label),256,274);
+    const patterns={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
+    for(const [x,y] of patterns[Number(label)]||[]){
+      const cx=256+x*105,cy=256+y*105;
+      const recess=ctx.createRadialGradient(cx-7,cy-9,3,cx,cy,37);
+      recess.addColorStop(0,'#111824');recess.addColorStop(.75,'#293241');recess.addColorStop(1,'#888a8d');
+      ctx.fillStyle=recess;ctx.beginPath();ctx.arc(cx,cy,37,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#faf8f2';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,38,.3,2.7);ctx.stroke();
+    }
   } else if(kind==='Treasure'){
     // Use the exact inventory icons, including their authored crystal facets,
     // orbiting spheres, and compass pendant. Blank outcomes remain blank.
@@ -127,19 +134,12 @@ export function faceTexture(label,kind,faceIndex=0){
   } else if(kind==='Action'){
     if(label==='TAKE')hand(ctx,p,true);else if(label==='GIVE')hand(ctx,p,false);else skull(ctx,p);
   } else rune(ctx,label,p);
-  return maps(c);
+  return maps(c,true);
 }
 export function offerFaceTexture(label){
-  const c=canvas(),ctx=c.getContext('2d'),p=DICE_PALETTES.Offer;stone(ctx,p,230+Number(label)*11);
-  ctx.strokeStyle=ctx.fillStyle=metallic(ctx,p);ctx.lineJoin='round';
-  for(const [pts,width] of [[[[256,20],[20,461],[492,461]],6],[[[256,50],[46,446],[466,446]],1.7]]){path(ctx,pts,true);ctx.lineWidth=width;ctx.stroke();}
-  // The three corners carry celestial spear points and fine branching inlay.
-  const center=[256,314];
-  for(const [x,y] of [[256,51],[51,440],[461,440]]){
-    ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(center[1]-y,center[0]-x)-Math.PI/2);star(ctx,0,15,17);ctx.lineWidth=1.8;
-    path(ctx,[[0,0],[0,65]]);ctx.stroke();for(const side of [-1,1]){path(ctx,[[side*3,22],[side*16,37],[side*12,53],[side*25,63]]);ctx.stroke();}ctx.restore();
-  }
-  for(const [x,y] of [[154,266],[358,266],[256,438]]){star(ctx,x,y,8);}
-  ctx.font='154px Georgia, "Times New Roman", serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#08040d';ctx.fillText(String(label),259,322);ctx.fillStyle=metallic(ctx,p);ctx.fillText(String(label),256,318);
-  return maps(c);
+  const c=canvas(),ctx=c.getContext('2d');ctx.fillStyle='#e8e4df';ctx.fillRect(0,0,512,512);
+  ctx.strokeStyle='#aaa3a4';ctx.lineWidth=2;path(ctx,[[256,39],[37,450],[475,450]],true);ctx.stroke();
+  ctx.font='bold 156px Georgia, serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#292433';ctx.fillText(String(label),256,316);
+  if(Number(label)===6||Number(label)===9){ctx.fillRect(227,388,58,5);}
+  return maps(c,true);
 }
