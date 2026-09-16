@@ -20,19 +20,20 @@
 .turn-roll-overlay.dice-picking .ds-option:hover,.turn-roll-overlay.dice-picking .ds-option:focus,.turn-roll-overlay.dice-picking .ds-option[aria-pressed=true]{background:transparent!important}
 .dice-selection-row{display:grid;grid-template-columns:repeat(var(--dice-count,2),minmax(0,1fr));gap:12px;width:100%;padding:14px 0 18px}
 .ds-option{--die-size:68px;--half:34px;--accent:#b59bdd;--face:#342843;--edge:#7d639a;position:relative;display:flex;flex-direction:column;align-items:center;min-width:0!important;padding:0 2px!important;border:0!important;border-radius:8px!important;background:transparent!important;box-shadow:none!important;color:#eee6f6!important;cursor:pointer;transform:none!important;text-shadow:none!important;filter:none!important;clip-path:none!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.ds-treasure{--accent:#e2c48a;--face:#443421;--edge:#987b49}.ds-rune{--accent:#9bc9cb;--face:#243c40;--edge:#608c90}
-.ds-offer{--accent:#f1e5d4;--face:#b9ada3;--edge:#71656f}
-.ds-offer .ds-d20-face{border:0;border-radius:0;background:linear-gradient(135deg,#ece5dc,#ada0a0);color:#382c3c;box-shadow:none;gap:0}
-.ds-offer .ds-d20-face:nth-child(3n){background:linear-gradient(145deg,#c6b9b3,#8e8288)}
+.ds-movement{--accent:#9bd7ff;--face:#2464a9;--edge:#72bfff}
+.ds-treasure{--accent:#ffda8d;--face:#b67719;--edge:#f5c76d}.ds-rune{--accent:#dbb7ff;--face:#7933aa;--edge:#c393f5}
+.ds-offer{--accent:#a0f5d9;--face:#187f69;--edge:#6bddbe}
+.ds-offer .ds-d20-face{border:0;border-radius:0;background:linear-gradient(135deg,#81ebc9bd,#19846bc4);color:#ecfff7;box-shadow:none;gap:0}
+.ds-offer .ds-d20-face:nth-child(3n){background:linear-gradient(145deg,#5cbba6bd,#146a5dc4)}
 .ds-offer .ds-symbol{font-size:18px;font-weight:600}
-.ds-offer[aria-pressed=true] .ds-stage{filter:drop-shadow(0 0 4px #ead9bdaa)}
+.ds-offer[aria-pressed=true] .ds-stage{filter:drop-shadow(0 0 3px #7fe5c955)}
 .ds-offer.is-result .ds-face-0{background:#fff1d6;color:#241b2b}
 .ds-option:disabled{opacity:1!important;cursor:default}.ds-option:focus-visible{outline:2px solid var(--accent)!important;outline-offset:4px}
 .ds-stage{display:block;position:relative;width:100%;height:150px;perspective:650px}
 .ds-shadow{position:absolute;width:70px;height:18px;background:#0009;filter:blur(6px);border-radius:50%;left:50%;top:113px;transform:translateX(-50%)}
 .ds-lift{position:absolute;left:50%;top:45px;width:var(--die-size);height:var(--die-size);margin-left:calc(var(--half)*-1);transform:translateY(0);transition:transform 140ms ease-out;transform-style:preserve-3d}
 .ds-cube{position:relative;display:block;width:100%;height:100%;transform:rotateX(-18deg) rotateY(24deg);transform-style:preserve-3d}
-.ds-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;border:1.5px solid var(--edge);border-radius:7px;background:linear-gradient(145deg,color-mix(in srgb,var(--face),white 9%),var(--face) 72%);box-shadow:inset 0 0 0 3px #0004,inset -5px -5px 9px #0004;color:var(--accent);backface-visibility:hidden;transition:box-shadow 140ms,border-color 140ms}
+.ds-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;border:1.5px solid var(--edge);border-radius:7px;background:linear-gradient(145deg,color-mix(in srgb,var(--edge) 76%,transparent),color-mix(in srgb,var(--face) 73%,transparent) 72%);box-shadow:inset 0 0 0 2px #ffffff25,inset -5px -5px 9px #0003;color:var(--accent);backface-visibility:hidden;transition:box-shadow 140ms,border-color 140ms}
 .ds-face-0{transform:translateZ(var(--half))}.ds-face-1{transform:rotateY(90deg) translateZ(var(--half))}.ds-face-2{transform:rotateY(180deg) translateZ(var(--half))}.ds-face-3{transform:rotateY(-90deg) translateZ(var(--half))}.ds-face-4{transform:rotateX(90deg) translateZ(var(--half))}.ds-face-5{transform:rotateX(-90deg) translateZ(var(--half))}
 .ds-symbol{font:500 30px/1 Georgia,serif}.ds-face small{font:700 7px/1 system-ui;letter-spacing:.035em;color:var(--accent)}
 .ds-name{font:500 15px/1.4 Georgia,serif;letter-spacing:.025em}.ds-indicator{height:22px;padding-top:5px;font:11px/1.3 system-ui;color:#9f93aa}.ds-result{min-height:21px;font:600 12px/1.6 system-ui;color:var(--accent)}

@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 
 export const DICE_PALETTES = Object.freeze({
-  Movement:{stone:'#392a43',metal:'#af8299',light:'#edc8dc',symbol:'#c58bdd',glow:0xc47aff},
-  Treasure:{stone:'#362a20',metal:'#b2874c',light:'#ffe1a3',symbol:'#e5b664',glow:0xffbf5c},
-  Action:{stone:'#213c3d',metal:'#6faaaa',light:'#c6f5e9',symbol:'#7cd7c8',glow:0x71ded0},
-  Rune:{stone:'#191225',metal:'#9f7bb2',light:'#e7ccff',symbol:'#bb8cde',glow:0xb783ff},
-  Offer:{stone:'#3a2545',metal:'#a58866',light:'#f7dfb4',symbol:'#ebd1a0',glow:0xc18aff}
+  Movement:{stone:'#268de0',metal:'#72bfff',light:'#d6f0ff',symbol:'#102c50',glow:0x74c7ff},
+  Treasure:{stone:'#e7a32d',metal:'#f5c76d',light:'#fff0c4',symbol:'#44270c',glow:0xffd17c},
+  Action:{stone:'#ce637e',metal:'#f294b0',light:'#ffe0ea',symbol:'#461529',glow:0xffacc9},
+  Rune:{stone:'#9952dd',metal:'#c393f5',light:'#f0ddff',symbol:'#30134e',glow:0xd3a1ff},
+  Offer:{stone:'#239e88',metal:'#6bddbe',light:'#ccfff0',symbol:'#073c32',glow:0x7aefd0}
 });
 export const TREASURE_DICE_ART = Object.freeze({
   RELIC:'assets/treasure-relic-gilded-v1.png',
@@ -101,23 +101,30 @@ function maps(c, ink=false){
   const coarse=typeof matchMedia==='function'&&matchMedia('(max-width:900px), (pointer:coarse)').matches;
   const upload=source=>{if(!coarse)return source;const scaled=document.createElement('canvas');scaled.width=scaled.height=256;scaled.getContext('2d').drawImage(source,0,0,256,256);return scaled;};
   const mask=canvas(),mc=mask.getContext('2d'),pixels=c.getContext('2d').getImageData(0,0,512,512),em=mc.createImageData(512,512);
-  for(let i=0;i<pixels.data.length;i+=4){const light=Math.max(pixels.data[i],pixels.data[i+1],pixels.data[i+2]);const v=ink?Math.max(0,175-light)*1.7:Math.max(0,light-87)*1.5;em.data[i]=em.data[i+1]=em.data[i+2]=v;em.data[i+3]=255;}
+  for(let i=0;i<pixels.data.length;i+=4){const light=Math.max(pixels.data[i],pixels.data[i+1],pixels.data[i+2]);const v=ink?(pixels.data[i+3]>245?Math.max(0,175-light)*1.7:0):Math.max(0,light-87)*1.5;em.data[i]=em.data[i+1]=em.data[i+2]=v;em.data[i+3]=255;}
   mc.putImageData(em,0,0);
   const texture=new THREE.CanvasTexture(upload(c)),emissiveMap=new THREE.CanvasTexture(upload(mask));
   for(const t of [texture,emissiveMap]){t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;}
   return {texture,emissiveMap};
 }
+// Translucent resin underneath opaque engraved markings. Front-facing surfaces
+// keep opposite-side numbers from ghosting through the result face.
+function resin(ctx,p){
+  const gradient=ctx.createLinearGradient(25,15,480,505);
+  gradient.addColorStop(0,p.light);gradient.addColorStop(.2,p.metal);gradient.addColorStop(.65,p.stone);gradient.addColorStop(1,p.metal);
+  ctx.globalAlpha=.73;ctx.fillStyle=gradient;ctx.fillRect(0,0,512,512);ctx.globalAlpha=1;
+}
 export function faceTexture(label,kind,faceIndex=0){
   const c=canvas(),ctx=c.getContext('2d'),base=DICE_PALETTES[kind]||DICE_PALETTES.Movement;
-  const ink={Movement:'#202634',Treasure:'#80632f',Rune:'#684b8c',Action:'#316768'}[kind]||'#303240';
+  const ink=base.symbol;
   const p={...base,light:ink,metal:ink,symbol:ink};
-  ctx.fillStyle='#e8e4df';ctx.fillRect(0,0,512,512);
+  resin(ctx,base);
   if(kind==='Movement'){
     const patterns={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
     for(const [x,y] of patterns[Number(label)]||[]){
       const cx=256+x*105,cy=256+y*105;
       const recess=ctx.createRadialGradient(cx-7,cy-9,3,cx,cy,37);
-      recess.addColorStop(0,'#111824');recess.addColorStop(.75,'#293241');recess.addColorStop(1,'#888a8d');
+      recess.addColorStop(0,'#071e39');recess.addColorStop(.75,ink);recess.addColorStop(1,base.metal);
       ctx.fillStyle=recess;ctx.beginPath();ctx.arc(cx,cy,37,0,Math.PI*2);ctx.fill();
       ctx.strokeStyle='#faf8f2';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,38,.3,2.7);ctx.stroke();
     }
@@ -127,7 +134,7 @@ export function faceTexture(label,kind,faceIndex=0){
     const img=treasureImages.get(label);
     if(img){const size=label==='RELIC'?326:312;ctx.drawImage(img,256-size/2,256-size/2,size,size);}
     else if(label==='CHOOSE'){
-      ctx.save();ctx.translate(256,256);ctx.strokeStyle=ctx.fillStyle=metallic(ctx,p);ctx.lineWidth=8;
+      ctx.save();ctx.translate(256,256);ctx.strokeStyle=ctx.fillStyle=metallic(ctx,p);ctx.lineWidth=14;
       for(let i=0;i<3;i++){const a=-Math.PI/2+i*Math.PI*2/3,x=Math.cos(a)*92,y=Math.sin(a)*92;ctx.beginPath();ctx.arc(x,y,34,0,Math.PI*2);ctx.stroke();star(ctx,x,y,19);}
       ctx.beginPath();ctx.arc(0,0,43,0,Math.PI*2);ctx.stroke();star(ctx,0,0,24);ctx.restore();
     }
@@ -137,9 +144,9 @@ export function faceTexture(label,kind,faceIndex=0){
   return maps(c,true);
 }
 export function offerFaceTexture(label){
-  const c=canvas(),ctx=c.getContext('2d');ctx.fillStyle='#e8e4df';ctx.fillRect(0,0,512,512);
-  ctx.strokeStyle='#aaa3a4';ctx.lineWidth=2;path(ctx,[[256,39],[37,450],[475,450]],true);ctx.stroke();
-  ctx.font='bold 156px Georgia, serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#292433';ctx.fillText(String(label),256,316);
+  const c=canvas(),ctx=c.getContext('2d'),p=DICE_PALETTES.Offer;resin(ctx,p);
+  ctx.strokeStyle=p.light;ctx.lineWidth=2;path(ctx,[[256,39],[37,450],[475,450]],true);ctx.stroke();
+  ctx.font='bold 156px Georgia, serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=p.symbol;ctx.fillText(String(label),256,316);
   if(Number(label)===6||Number(label)===9){ctx.fillRect(227,388,58,5);}
   return maps(c,true);
 }

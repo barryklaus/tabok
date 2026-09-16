@@ -237,14 +237,14 @@ test('Gilded Fate uses reference-matched treasure art and engraved symbol dice',
   assert.match(html,new RegExp(asset.replaceAll('.','\\.')));
   assert.ok(fs.existsSync(path.join(root,asset)),`${name} production icon must exist`);
  }
- assert.match(html,/true3d-dice\.js\?v=20260916D3/);
+ assert.match(html,/true3d-dice\.js\?v=20260916D4/);
  const art=fs.readFileSync(path.join(root,'dice-reference-art.js'),'utf8');
  for(const name of ['relic','oddity','keepsake'])assert.ok(art.includes(`assets/treasure-${name}-gilded-v1.png`));
  assert.match(art,/ctx\.drawImage\(img,/);
  assert.match(dice,/await preloadTreasureIcons\(\)/);
  assert.match(dice,/faceTexture\(label, kind, faceIndex\)/);
- assert.match(art,/Movement:.*glow:0xc47aff/);
- assert.match(art,/Action:.*glow:0x71ded0/);
+ assert.match(art,/Movement:.*glow:0x74c7ff/);
+ assert.match(art,/Action:.*glow:0xffacc9/);
 });
 
 test('Awakened Judges removes equipment and uses one private turn ritual',()=>{

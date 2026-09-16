@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { simulateDiceThrow, sampleDiceThrow } from './dice-physics.js?v=20260915D1';
-import { faceTexture, offerFaceTexture, DICE_PALETTES, preloadTreasureIcons } from './dice-reference-art.js?v=20260915D1';
+import { faceTexture, offerFaceTexture, DICE_PALETTES, preloadTreasureIcons } from './dice-reference-art.js?v=20260916D4';
 await preloadTreasureIcons();
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
@@ -114,9 +114,9 @@ export class TabokDice3D {
     if (this.dieResources.has(key)) return this.dieResources.get(key);
     const materials = labels.map((label, faceIndex) => {
       const {texture,emissiveMap} = faceTexture(label, kind, faceIndex);
-      return new THREE.MeshStandardMaterial({
+      return new THREE.MeshPhysicalMaterial({
         map: texture, emissiveMap, emissive:0x000000, emissiveIntensity:0, bumpMap: texture, bumpScale: .026,
-        color: 0xffffff, roughness: .3, metalness: .025
+        color:0xffffff,transparent:true,side:THREE.FrontSide,roughness:.2,metalness:0,clearcoat:1,clearcoatRoughness:.12
       });
     });
     const frame = new THREE.Group(); // Smooth ceramic edges, without metal cages.
@@ -139,16 +139,16 @@ export class TabokDice3D {
     const labels=(faceLabels?.length===20?faceLabels:FACE_SETS.Offer).map(String),key='Offer|'+labels.join(',');
     let resource=this.dieResources.get(key);
     if(!resource){
-      const geometry=new THREE.IcosahedronGeometry(1.46,0),body=new THREE.MeshStandardMaterial({color:0xe8e4df,roughness:.3,metalness:.025});
+      const geometry=new THREE.IcosahedronGeometry(1.46,0),body=new THREE.MeshPhysicalMaterial({color:DICE_PALETTES.Offer?.stone||'#239e88',transparent:true,opacity:.16,depthWrite:false,roughness:.2,metalness:0,clearcoat:1,clearcoatRoughness:.12});
       const template=new THREE.Group(),stone=new THREE.Mesh(geometry,body);stone.castShadow=true;stone.receiveShadow=true;template.add(stone);
-      template.add(new THREE.LineSegments(new THREE.EdgesGeometry(geometry,16),new THREE.LineBasicMaterial({color:0x6a6470,transparent:true,opacity:.25})));
+      template.add(new THREE.LineSegments(new THREE.EdgesGeometry(geometry,16),new THREE.LineBasicMaterial({color:0xb8ffe7,transparent:true,opacity:.3})));
       const positions=geometry.attributes.position,faceNormals=[],resultMaterials=[];
       for(let face=0;face<20;face++){
         const vertices=[0,1,2].map(i=>new THREE.Vector3().fromBufferAttribute(positions,face*3+i));
         const [a,b,c]=vertices,center=a.clone().add(b).add(c).multiplyScalar(1/3),normal=new THREE.Vector3().crossVectors(b.clone().sub(a),c.clone().sub(a)).normalize();
         if(normal.dot(center)<0)normal.negate();faceNormals.push(normal.clone());
         const {texture,emissiveMap}=offerFaceTexture(labels[face]);
-        const material=new THREE.MeshStandardMaterial({map:texture,emissiveMap,bumpMap:texture,bumpScale:.009,emissive:0x000000,emissiveIntensity:0,roughness:.3,metalness:.025});
+        const material=new THREE.MeshPhysicalMaterial({map:texture,emissiveMap,bumpMap:texture,bumpScale:.009,emissive:0x000000,emissiveIntensity:0,transparent:true,side:THREE.FrontSide,roughness:.2,metalness:0,clearcoat:1,clearcoatRoughness:.12});
         // Full triangular surfaces share the die's actual vertices. There are
         // no small square decals, transparent corners, or rotated face labels.
         const faceGeometry=new THREE.BufferGeometry();

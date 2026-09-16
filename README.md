@@ -1,6 +1,12 @@
 # TABOK — The Crossing
 
-Version: **v1.5.8 — Physical Dice + CPU · 2026.09.16.D3**
+Version: **v1.5.9 — Crystal Dice · 2026.09.16.D4**
+
+## v1.5.9 — Crystal Dice
+
+- Distinct polished translucent-resin colors: sapphire Movement, amber Treasure, amethyst Rune, and emerald Offering / Last Chance. The legacy Action die is rose-colored.
+- Opaque high-contrast engravings preserve legibility; matching selection accents and CSS fallback colors keep each die identifiable.
+- Existing models, pip recesses, physics, CPU behavior, unlock requirements and odds are unchanged. Transparency uses lightweight alpha surfaces without a costly refraction pass.
 
 ## v1.5.8 — Physical Dice + CPU
 

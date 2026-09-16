@@ -33,6 +33,18 @@ test('Movement dice have recessed pips and keep their geometry cached',async()=>
  d.clearDice();assert.equal(d.buildDice('Movement',0).geometry,g);
 });
 
+test('resin dice use polished alpha surfaces without an expensive transmission pass',async()=>{
+ const{d,THREE}=await board();
+ for(const kind of ['Movement','Treasure','Rune','Action']){
+  const die=d.buildDice(kind,0);
+  for(const material of die.material){assert.equal(material.isMeshPhysicalMaterial,true);assert.equal(material.transparent,true);assert.equal(material.clearcoat,1);assert.equal(material.transmission,0);assert.equal(material.side,THREE.FrontSide)}
+ }
+ const offering=d.buildDice('Offer',0),lastChance=d.buildDice('Last Chance',0);
+ assert.equal(offering.children[0].material,lastChance.children[0].material);
+ assert.ok(offering.children[0].material.opacity<1);
+ for(const material of offering.userData.resultMaterials){assert.equal(material.transparent,true);assert.equal(material.clearcoat,1);assert.equal(material.transmission,0)}
+});
+
 test('a replacement roll and hide cancel pending rolls without stale pose updates',async()=>{
  const{d}=await board();d.buildDice('Movement',0);d.prepare=()=>true;d.render=()=>{};
  d.canvas={classList:{add(){},remove(){}}};d.animationGeneration=0;d.pendingResolve=null;

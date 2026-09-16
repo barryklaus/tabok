@@ -6,7 +6,7 @@
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
 <link rel="stylesheet" href="ritual-redesign.css">
 <link rel="stylesheet" href="celestial-ui.css">
-<link rel="stylesheet" href="dice-selection.css?v=20260916D3">
+<link rel="stylesheet" href="dice-selection.css?v=20260916D4">
 <style>body{margin:0;min-height:100vh;background:#191520 url(assets/ruin-wall-texture.png) center/700px;color:#eee;font-family:system-ui}.turn-roll-overlay{position:fixed;inset:0;display:grid;place-items:center;box-sizing:border-box}.turn-roll-dialog{box-sizing:border-box}.turn-roll-heading{display:flex}.turn-roll-name{font-family:Georgia,serif}.turn-roll-kicker{text-transform:uppercase}.turn-roll-role{margin-bottom:6px}.preview-inventory{display:flex;justify-content:center;flex-wrap:wrap;gap:18px;font-size:12px;margin:15px 0;color:#d4c7df}.preview-inventory label{cursor:pointer}</style>
 <div class="turn-roll-overlay dice-picking">
   <section class="turn-roll-dialog" aria-label="TABOK dice selection">
@@ -24,7 +24,7 @@
 <script>
   const host=document.getElementById('turnRollDice'),control=document.getElementById('turnRollControl'),status=document.getElementById('status');
   let selection=[],busy=false,physicalDice=null;
-  import('./true3d-dice.js?v=20260916D3').then(({TabokDice3D})=>{physicalDice=new TabokDice3D(host);render()}).catch(console.warn);
+  import('./true3d-dice.js?v=20260916D4').then(({TabokDice3D})=>{physicalDice=new TabokDice3D(host);render()}).catch(console.warn);
   const hasRune=document.getElementById('hasRune'),hasTreasure=document.getElementById('hasTreasure');
   const allowed=()=>TabokDiceSelection.available({rune:hasRune.checked,inventory:[hasTreasure.checked?1:0,0,0]});
   function toggle(name){if(busy)return;selection=TabokDiceSelection.normalize(selection.includes(name)?selection.filter(value=>value!==name):[...selection,name],allowed());render();host.querySelector('[data-dice-choice="'+name+'"]').focus({preventScroll:true})}
