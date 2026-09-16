@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v1.5.5 Choose Your Dice · D1';
+  const VERSION = 'v1.5.6 Earned Dice · D2';
   const TOKEN_KEY = 'tabok-multiplayer-token';
   const NAME_KEY = 'tabok-multiplayer-name';
   const ACTIVE_ROOM_KEY = 'tabok-active-guest-room';

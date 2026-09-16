@@ -1,6 +1,13 @@
 # TABOK — The Crossing
 
-Version: **v1.5.5 — Choose Your Dice · 2026.09.16.D1**
+Version: **v1.5.6 — Earned Dice · 2026.09.16.D2**
+
+## v1.5.6 — Earned Dice
+
+- Movement and Treasure are always available. Rune appears only after collecting a Rune on the board; Offering D20 appears only while carrying treasure.
+- Select any combination of available dice. Eligibility is checked again before rolling, including for multiplayer actions and CPU turns.
+- Offering uses all 20 outcomes and the existing give/discard rules, resolving after movement, Rune effects, and Treasure rewards.
+- The responsive dice tray is translucent so the board remains visible behind it. The Offering die has 20 triangular 3D faces.
 
 ## v1.5.5 — Choose Your Dice
 
