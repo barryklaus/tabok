@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TABOK · Choose your dice</title>
+<link rel="stylesheet" href="ritual-redesign.css">
+<link rel="stylesheet" href="celestial-ui.css">
+<link rel="stylesheet" href="dice-selection.css">
+<style>body{margin:0;background:#09070e;color:#eee;font-family:system-ui}.turn-roll-overlay{position:fixed;inset:0;display:grid;place-items:center;box-sizing:border-box}.turn-roll-dialog{box-sizing:border-box}.turn-roll-heading{display:flex}.turn-roll-name{font-family:Georgia,serif}.turn-roll-kicker{text-transform:uppercase}.turn-roll-role{margin-bottom:6px}</style>
+<div class="turn-roll-overlay dice-picking">
+  <section class="turn-roll-dialog" aria-label="TABOK dice selection">
+    <div class="turn-roll-heading"><div class="turn-roll-copy">
+      <div class="turn-roll-kicker">TABOK · THE CROSSING</div>
+      <h1 class="turn-roll-name">Choose your dice</h1>
+      <div class="turn-roll-role">Movement, treasure, or a little magic.</div>
+    </div></div>
+    <div class="turn-roll-status" id="status">Select 1, 2, or all 3 dice</div>
+    <div id="turnRollDice"></div><div id="turnRollControl"></div>
+  </section>
+</div>
+<script src="dice-selection.js"></script>
+<script>
+  const host=document.getElementById('turnRollDice'),control=document.getElementById('turnRollControl'),status=document.getElementById('status');
+  let selection=[],busy=false;
+  function toggle(name){if(busy)return;selection=TabokDiceSelection.normalize(selection.includes(name)?selection.filter(value=>value!==name):[...selection,name]);render();host.querySelector('[data-dice-choice="'+name+'"]').focus({preventScroll:true})}
+  function render(){TabokDiceSelection.mount(host,control,selection,toggle,cast);status.textContent=selection.length?selection.length+' selected · ready to roll':'Select 1, 2, or all 3 dice'}
+  async function cast(){if(busy||!selection.length)return;busy=true;status.textContent='Rolling selected dice…';const specs=selection.map(label=>({label,result:TabokDiceSelection.faces[label][Math.floor(Math.random()*6)]}));await TabokDiceSelection.roll(host,control,specs);status.textContent=specs.map(spec=>spec.label+': '+spec.result).join(' · ');busy=false;host.querySelectorAll('button').forEach(button=>button.disabled=false);control.querySelector('button').disabled=false}
+  render();
+</script>
+</html>

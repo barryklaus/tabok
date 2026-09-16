@@ -55,5 +55,5 @@ test('the existing public monster factory routes major monsters to the new sculp
  const api=await import(data(factory));
  assert.equal(api.createMonsterPilot('major').name,'The Void Keeper');assert.equal(api.createMajorMonster().name,'The Void Keeper');
  assert.match(api.createMinorMonster().name,/Riftback/);assert.equal(api.MONSTER_3D.major.title,'The Void Keeper');
- const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');assert.match(board,/major \? createMonsterPilot\('major'\)/);
+ const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');assert.match(board,/this\.prewarmedMajorVisual\|\|createMonsterPilot\('major'\)/);
 });

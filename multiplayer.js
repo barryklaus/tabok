@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v1.5.1 Last Chance · T2';
+  const VERSION = 'v1.5.5 Choose Your Dice · D1';
   const TOKEN_KEY = 'tabok-multiplayer-token';
   const NAME_KEY = 'tabok-multiplayer-name';
   const ACTIVE_ROOM_KEY = 'tabok-active-guest-room';
@@ -732,7 +732,7 @@
     if(target.closest('.portal-target'))return{kind:'portal'};
     const button=target.closest('button'); if(!button)return null;
     if(button.id)return{kind:'button',id:button.id,scope:button.closest('#messageOverlay')||(button.closest('#turnRollOverlay')&&(els.turnRoll.dataset.challengePlayer||game?.challengePlayer))?'message':'game'};
-    const dataKeys=['turnType','offerType','offerTarget','offerDiscard','groupAnswer','answerIndex','trivia','replace','runePower','runeTarget','plunderAdd','plunderRemove','plunderBack','plunderConfirm'];
+    const dataKeys=['diceChoice','turnType','offerType','offerTarget','offerDiscard','groupAnswer','answerIndex','trivia','replace','runePower','runeTarget','plunderAdd','plunderRemove','plunderBack','plunderConfirm'];
     const data={}; dataKeys.forEach(key=>{if(button.dataset[key]!==undefined)data[key]=button.dataset[key]});
     return{kind:'button',data,aria:button.getAttribute('aria-label')||'',text:button.textContent.trim().replace(/\s+/g,' '),scope:button.closest('#messageOverlay')?'message':'game'};
   }

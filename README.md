@@ -1,6 +1,21 @@
 # TABOK — The Crossing
 
-Version: **v1.5.3 — Moonlit Sanctuary · 2026.09.11.L2**
+Version: **v1.5.5 — Choose Your Dice · 2026.09.16.D1**
+
+## v1.5.5 — Choose Your Dice
+
+- Select any combination of Movement, Treasure, and Rune in one horizontal row, then press **ROLL SELECTED**.
+- Only selected dice roll and contribute results. Rune can now be selected independently; Movement supplies its base distance when included. Treasure resolves after any movement.
+- A brief 3D spin and bounce settles into a readable result, then returns to the tray. No camera movement or particles accompany the roll.
+- Open `dice-selection-preview.html` for a repeatable interaction preview.
+
+## v1.5.4 — Physical Law
+
+- Travelers, awakened Judges, and the Seventh can never share or cross an occupied hex. Any route that meets another actor ends on the adjacent hex; Pounce also selects only an open destination.
+- Every hidden Monster Direction D6 has a 50% chance to favor a direction that closes distance to an active Traveler. The other half remains the unmodified random roll.
+- Last Chance now casts the same engraved physical D20 used by Offering, including identical geometry, numbered faces, materials, landing behavior, and cached resources.
+- Rune claims no longer leave an invisible resolver delay after their visual finishes. Dormant Judge sculptures are activated in place, the Seventh is prepared during board loading, and transition fallback images are decoded during idle time to remove rejection and summoning hitches.
+- Monster travel follows every collision-checked hex in one continuous, eased slide, without pausing at individual hex centers.
 
 ## v1.5.3 — Moonlit Sanctuary
 

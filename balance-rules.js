@@ -122,9 +122,20 @@
 
   function rollFace(faces,random=Math.random){return faces[Math.min(faces.length-1,Math.floor((Number(random())||0)*faces.length))]}
 
+  // Direction remains a hidden D6. Half of casts keep the rolled face; half
+  // choose among the directions that currently reduce the distance to a
+  // Traveler. Keeping this rule here makes the 50/50 split deterministic and
+  // testable without exposing the favorable cast in the game log.
+  function favorMonsterDirection(rolled,scoredDirections,random=Math.random){
+    const candidates=Array.isArray(scoredDirections)?scoredDirections.filter(candidate=>candidate&&candidate.face&&Number.isFinite(candidate.distance)):[];
+    if(!candidates.length||Number(random())>=.5)return rolled;
+    const closest=Math.min(...candidates.map(candidate=>candidate.distance));
+    return rollFace(candidates.filter(candidate=>candidate.distance===closest).map(candidate=>candidate.face),random);
+  }
+
   return{
-    VERSION:'3.4',TURN_TYPES,MOVEMENT_D6,HEX_DIRECTION_D6,TREASURE_D6,OFFER_D20,RUNE_FAMILIES,MINOR_CHAOS_D6,MAJOR_CHAOS_D6,
+    VERSION:'3.5',TURN_TYPES,MOVEMENT_D6,HEX_DIRECTION_D6,TREASURE_D6,OFFER_D20,RUNE_FAMILIES,MINOR_CHAOS_D6,MAJOR_CHAOS_D6,
     normalizeInventory,inventorySpread,crossingProbability,portalAwakeningCount,offerTransferCount,lastChance,
-    minorMonsterRoll,majorMonsterRoll,rollFace
+    minorMonsterRoll,majorMonsterRoll,rollFace,favorMonsterDirection
   };
 });

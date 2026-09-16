@@ -47,3 +47,12 @@ test('monster dice distinguish multipliers from attacks',()=>{
   assert.deepEqual(rules.majorMonsterRoll(6,'×6'),{movement:6,chaos:'×6',distance:36,fireball:false});
   assert.deepEqual(rules.majorMonsterRoll(2,'FIREBALL'),{movement:2,chaos:'FIREBALL',distance:0,fireball:true});
 });
+
+test('hidden monster direction favors the nearest Traveler on exactly half the casts',()=>{
+  const rolled={edge:'A'},near={edge:'B'},far={edge:'C'};
+  const scored=[{face:near,distance:1},{face:far,distance:4}];
+  assert.equal(rules.favorMonsterDirection(rolled,scored,()=>.5),rolled,'upper half preserves the rolled direction');
+  const favorable=[.499,0];
+  assert.equal(rules.favorMonsterDirection(rolled,scored,()=>favorable.shift()),near,'lower half selects a closest direction');
+  assert.equal(rules.favorMonsterDirection(rolled,[],()=>0),rolled,'no legal scored direction leaves the roll unchanged');
+});

@@ -133,7 +133,7 @@ test('Grounded Legends removes plinths, faces travel and shares character speech
  assert.match(html,/journeyLength:route\.length/);
 });
 
-test('Decision Altar exposes canonical turn and Offer choices',()=>{
+test('Decision Altar exposes independent dice selection and keeps trial actions',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const multiplayer=fs.readFileSync(path.join(root,'multiplayer.js'),'utf8');
  const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
@@ -141,9 +141,7 @@ test('Decision Altar exposes canonical turn and Offer choices',()=>{
  const major=fs.readFileSync(path.join(root,'void-keeper.js'),'utf8');
  const cinematics=fs.readFileSync(path.join(root,'portal-cinematics.js'),'utf8');
  assert.match(html,/id="actionDecisionOverlay"/);
- assert.match(html,/data-turn-type="NORMAL"/);
- assert.match(html,/data-turn-type="RUNE"/);
- assert.match(html,/data-turn-type="OFFER"/);
+ assert.match(html,/TabokDiceSelection\.mount/);
  assert.match(html,/window\.TabokSelect3DActor=select3DActor/);
  assert.match(html,/actor-tooltip-health/);
  assert.match(multiplayer,/window\.TabokRoute3DActor=route3DActor/);
@@ -239,7 +237,7 @@ test('Gilded Fate uses reference-matched treasure art and engraved symbol dice',
   assert.match(html,new RegExp(asset.replaceAll('.','\\.')));
   assert.ok(fs.existsSync(path.join(root,asset)),`${name} production icon must exist`);
  }
- assert.match(html,/true3d-dice\.js\?v=20260911R1/);
+ assert.match(html,/true3d-dice\.js\?v=20260915P1/);
  const art=fs.readFileSync(path.join(root,'dice-reference-art.js'),'utf8');
  for(const name of ['relic','oddity','keepsake'])assert.ok(art.includes(`assets/treasure-${name}-gilded-v1.png`));
  assert.match(art,/ctx\.drawImage\(img,/);
@@ -254,7 +252,7 @@ test('Awakened Judges removes equipment and uses one private turn ritual',()=>{
  const css=fs.readFileSync(path.join(root,'celestial-ui.css'),'utf8');
  const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
  assert.match(html,/game\.phase==='choose',rolling=game\.phase==='roll'/);
- assert.match(html,/turn-die-selection/);
+ assert.match(html,/dice-picking/);
  assert.match(html,/equipment:new Map\(\)/);
  assert.doesNotMatch(html,/shield:false,armor:false/);
  assert.doesNotMatch(html,/1-1-1/);
@@ -307,19 +305,20 @@ test('Mobile Anchor prevents Safari eviction, rejoins guests and restores full C
  assert.match(board,/webglcontextlost/);
 });
 
-test('Flexible Offering combines rituals, permits discard and keeps monster travel continuous',()=>{
+test('Flexible Offering combines rituals, permits discard and keeps monster travel collision-safe',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const css=fs.readFileSync(path.join(root,'celestial-ui.css'),'utf8');
  const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
  const network=fs.readFileSync(path.join(root,'multiplayer.js'),'utf8');
- assert.match(html,/data-turn-type="NORMAL_OFFER"/);
- assert.match(html,/data-turn-type="RUNE_OFFER"/);
+
  assert.match(html,/function beginOfferPhase\(\)/);
  assert.match(html,/data-offer-discard="1"/);
  assert.match(html,/animateTreasureTransfer\(discard\?'DISCARD':'GIVE'/);
  assert.match(html,/if\(turn\.withOffer\)\{beginOfferPhase\(\);return\}/);
  assert.match(html,/function planMonsterGlide/);
- assert.match(html,/await animateActor\(m\.id,from,final/);
+ assert.match(html,/await animateMonsterRoute\(m,route/);
+ assert.match(html,/webglBoard\.animateActorRoute\(monster\.id,from,route,ms\)/);
+ assert.match(board,/animateActorRoute\(id, from, route, duration = 720\)/);
  assert.match(html,/class="roll-guidance hidden"/);
  assert.match(css,/Flexible Offering/);
  const activation=board.match(/activateJudge\(id\) \{([\s\S]*?)\n  \}/)?.[1]||'';
@@ -332,10 +331,28 @@ test('Six-direction monsters and the physical Offer D20 are wired into the live 
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const dice=fs.readFileSync(path.join(root,'true3d-dice.js'),'utf8');
  assert.deepEqual(balance.HEX_DIRECTION_D6.map(face=>face.edge),['A','B','C','D','E','F']);
- assert.match(html,/function rollHiddenDirection\(\)/);
+ assert.match(html,/function rollHiddenDirection\(monster\)/);
+ assert.match(html,/BALANCE\.favorMonsterDirection\(rolled,scored,Math\.random\)/);
  assert.match(html,/faceMonsterForDirection\(m,direction\)/);
  assert.match(html,/planMonsterGlide\(m,roll\.distance,direction\.edge\)/);
  assert.match(dice,/buildOfferDie\(x, faceLabels=null\)/);
  assert.match(dice,/new THREE\.IcosahedronGeometry\(1\.46,0\)/);
- assert.match(html,/type==='OFFER'\?\[offerSpec\]/);
+ assert.match(dice,/kind==='Offer'\|\|kind==='Last Chance'/);
+ assert.match(html,/dice3D\?\.prepare\(\[lastChanceSpec\],p\.color\)/);
+});
+
+test('Physical Law stops every actor before occupied hexes and prewarms expensive summons',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const board=fs.readFileSync(path.join(root,'true3d-board.js'),'utf8');
+ assert.match(html,/const actorAt=id=>game\.players\.some\(player=>player\.status==='active'&&player\.pos===id\)\|\|game\.monsters\.some/);
+ assert.match(html,/if\(advance\.stoppedByActor\)\{route\.stoppedByActor=true;break\}/);
+ assert.match(html,/if\(hexOccupied\(step,p,null\)\)\{stoppedByOccupancy=true;break\}/);
+ assert.match(html,/filter\(id=>id!==m\.pos&&!hexOccupied\(id,null,m\)\)/);
+ assert.match(html,/requestAnimationFrame\(\(\)=>requestAnimationFrame\(resolve\)\)/);
+ assert.doesNotMatch(html,/runeClaim\.offsetWidth/);
+ assert.match(html,/dice3D\?\.prepare\(\[lastChanceSpec\],p\.color\)/);
+ assert.match(board,/this\.prewarmedMajorVisual = createMonsterPilot\('major'\)/);
+ assert.match(board,/this\.prewarmedMajorVisual\?\.removeFromParent\(\)/);
+ assert.match(board,/dormant\.userData\.setActive\?\.\(true\)/);
+ assert.match(board,/visual\.userData\.setActive\?\.\(false\)/);
 });
