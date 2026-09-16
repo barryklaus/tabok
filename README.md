@@ -1,6 +1,14 @@
 # TABOK — The Crossing
 
-Version: **v1.5.7 — Solid Passage · 2026.09.16.P3**
+Version: **v1.5.8 — Physical Dice + CPU · 2026.09.16.D3**
+
+## v1.5.8 — Physical Dice + CPU
+
+- The translucent selector uses the original recessed-pip ceramic dice, symbol dice and ivory Offering D20. Only selected dice spin and bounce; unselected dice remain stationary. Results briefly highlight and return to their slots. CSS dice remain a compatibility fallback.
+- Rune and Offering still require earned equipment and carried treasure. Last Chance retains the exact same D20 model.
+- CPU dice rolls are visible, read-only, locally and to online spectators. Human turn dice remain private to their owner online.
+- CPU decisions favor a small balanced collection, useful Rune rolls, shedding excess treasure, reachable Rune pickups and safer legal routes. Low health increases caution; blocked hexes remain impassable. No hidden future rolls or modified odds are used.
+- Guest snapshots reattach their own local 3D renderer instead of copying an empty canvas. All 80 automated checks pass, including every dice combination, CPU inventory decisions, path safety and spectator visibility.
 
 ## v1.5.7 — Solid Passage
 

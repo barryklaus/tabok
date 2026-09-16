@@ -1,4 +1,4 @@
-/* Inventory-aware dice tray. CSS 3D faces keep selection and rolls lightweight. */
+/* Inventory-aware tray with the original physical models and a CSS fallback. */
 (function(root){
   'use strict';
   const names=['Movement','Treasure','Rune','Offer'];
@@ -25,8 +25,16 @@
       return '<button type="button" class="ds-option ds-'+name.toLowerCase()+'" data-dice-choice="'+name+'" aria-label="'+(name==='Offer'?'Offering D20':name+' die')+'" aria-pressed="'+on+'"><span class="ds-stage" aria-hidden="true"><span class="ds-shadow"></span><span class="ds-lift"><span class="ds-cube">'+labels.map((label,i)=>'<span class="ds-face ds-face-'+i+(name==='Offer'?' ds-d20-face':'')+'" '+(name==='Offer'?'style="'+d20Styles[i]+'"':'')+'>'+face(label)+'</span>').join('')+'</span></span></span><strong class="ds-name">'+(name==='Offer'?'Offering D20':name)+'</strong><span class="ds-indicator">'+(on?'✓ Selected':'Select')+'</span><span class="ds-result" aria-live="polite"></span></button>';
     }).join('')+'</div>';
   }
-  function mount(host,control,selection,onToggle,onRoll,allowed=available()){
+  function mount(host,control,selection,onToggle,onRoll,allowed=available(),view={}){
+    const renderer=view.renderer;
+    if(renderer?.canvas.parentNode===host)host.before(renderer.canvas);
     host.innerHTML=markup(selection,allowed);
+    host._diceSelectionRenderer=null;
+    host.classList.remove('ds-physical');
+    if(renderer&&host.getBoundingClientRect().width){
+      try{renderer.showSelection(normalize(allowed).map(label=>({label,faces:view.faces?.[label]||faces[label]})),selection);host._diceSelectionRenderer=renderer}
+      catch(error){renderer.hide();console.warn('Physical dice unavailable; using CSS dice.',error)}
+    }
     host.querySelectorAll('[data-dice-choice]').forEach(button=>button.onclick=()=>onToggle(button.dataset.diceChoice));
     control.innerHTML='<button type="button" class="ds-roll" id="rollSelectedDice" '+(!normalize(selection,allowed).length?'disabled':'')+'>ROLL SELECTED</button>';
     control.querySelector('button').onclick=onRoll;
@@ -40,22 +48,47 @@
       const button=buttons.find(button=>button.dataset.diceChoice===spec.label);
       if(!button)return null;
       const result=String(spec.result);
-      if(!faces[spec.label]?.includes(result))throw new Error('Invalid die result');
-      const labels=faces[spec.label],resultIndex=labels.indexOf(result);
+      const labels=(spec.faces||faces[spec.label]).map(String);
+      if(!labels.includes(result))throw new Error('Invalid die result');
+      const resultIndex=labels.indexOf(result);
       button.querySelectorAll('.ds-face').forEach((panel,index)=>{panel.innerHTML=face(labels[(resultIndex+index)%labels.length])});
       button.classList.add('is-rolling');
       return{button,result};
     }).filter(Boolean);
     const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-    await wait(reduced?100:780);
+    const renderer=host._diceSelectionRenderer;
+    if(renderer){if(!await renderer.castSelection(specs))return}
+    else await wait(reduced?100:780);
+    const generation=renderer?.animationGeneration;
     rolling.forEach(({button,result})=>{button.classList.remove('is-rolling');button.classList.add('is-result');button.querySelector('.ds-result').textContent=result==='CHOOSE'?'Choose treasure':result==='BLANK'?'Blank':result;button.setAttribute('aria-label',button.dataset.diceChoice+' die: '+result)});
     if(rollButton)rollButton.textContent='RESULTS';
     await wait(420);
     rolling.forEach(({button})=>{button.classList.remove('is-result');button.classList.add('is-returning')});
-    await wait(reduced?0:180);
+    if(renderer){if(!renderer.selectionMode||renderer.animationGeneration!==generation)return;await renderer.returnSelection()}
+    else await wait(reduced?0:180);
     rolling.forEach(({button})=>button.classList.remove('is-returning'));
     if(rollButton)rollButton.textContent='ROLL SELECTED';
   }
-  root.TabokDiceSelection={names,faces,available,normalize,markup,mount,roll};
+  // Guest UI snapshots contain HTML, not GPU pixels. Reattach the local canvas
+  // and animate the host's resolved values once, without rerolling any rules.
+  function restorePhysical(host,renderer,state){
+    host.querySelectorAll('canvas').forEach(canvas=>{if(canvas!==renderer?.canvas)canvas.remove()});
+    if(!renderer||!state)return;
+    const selected=normalize(state.selected,state.specs.map(spec=>spec.label));
+    const key=JSON.stringify([state.phase,state.specs,selected]);
+    try{
+      if(renderer.selectionMode&&renderer.remoteSelectionKey===key){host.append(renderer.canvas);renderer.render();return}
+      renderer.showSelection(state.specs,selected);renderer.remoteSelectionKey=key;
+      const specs=state.specs.filter(spec=>selected.includes(spec.label));
+      if(state.phase!=='roll'||!specs.length||!specs.every(spec=>spec.faces.map(String).includes(String(spec.result))))return;
+      renderer.castSelection(specs).then(async completed=>{
+        if(!completed)return;
+        const generation=renderer.animationGeneration;
+        await new Promise(resolve=>setTimeout(resolve,420));
+        if(renderer.selectionMode&&renderer.animationGeneration===generation)await renderer.returnSelection();
+      }).catch(error=>{renderer.hide();console.warn('Guest dice use the CSS fallback.',error)});
+    }catch(error){renderer.hide();console.warn('Guest dice use the CSS fallback.',error)}
+  }
+  root.TabokDiceSelection={names,faces,available,normalize,markup,mount,roll,restorePhysical};
   if(typeof module==='object'&&module.exports)module.exports=root.TabokDiceSelection;
 })(typeof window==='object'?window:globalThis);

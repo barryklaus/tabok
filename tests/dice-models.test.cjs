@@ -50,3 +50,30 @@ test('reduced motion resolves the correct die in one frame',async()=>{
  let callback;global.requestAnimationFrame=fn=>{callback=fn;return 1};global.cancelAnimationFrame=()=>{};global.matchMedia=()=>({matches:true});
  const done=d.cast([{label:'Movement',result:'3'}],2000);callback(performance.now());assert.equal(await done,true);assert.equal(d.dice[0].userData.resultFace,2);
 });
+
+test('all fifteen selection combinations keep unselected 3D dice stationary and return selected dice to their slots',async()=>{
+ const{d,THREE}=await board();
+ for(const label of ['Movement','Treasure','Rune','Offer']){const die=d.buildDice(label,0);die.userData.selectionLabel=label;die.position.set(0,1.255,0)}
+ d.render=()=>{};d.animationGeneration=0;
+ let callback;global.requestAnimationFrame=fn=>{callback=fn;return 1};global.cancelAnimationFrame=()=>{};
+ for(const reduced of [false,true])for(let mask=1;mask<16;mask++){
+  global.matchMedia=()=>({matches:reduced});
+  d.dice.forEach((die,i)=>die.userData.selected=Boolean(mask&(1<<i)));
+  const before=d.dice.map(die=>({position:die.position.clone(),quaternion:die.quaternion.clone()}));
+  const specs=d.dice.filter(die=>die.userData.selected).map(die=>({label:die.userData.selectionLabel,result:die.userData.labels.at(-1)}));
+  const done=d.castSelection(specs);callback(performance.now()+9999);assert.equal(await done,true);
+  d.dice.forEach((die,i)=>{
+   if(!die.userData.selected){assert.ok(die.position.equals(before[i].position));assert.ok(die.quaternion.equals(before[i].quaternion))}
+   else{const normals=die.userData.faceNormals||[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]].map(v=>new THREE.Vector3(...v));assert.ok(normals[die.userData.resultFace].clone().applyQuaternion(die.quaternion).y>.999);assert.ok(Math.abs(die.position.z-.48)<1e-6)}
+  });
+  const returned=d.returnSelection();callback(performance.now()+9999);assert.equal(await returned,true);
+  d.dice.filter(die=>die.userData.selected).forEach(die=>{assert.equal(die.position.x,0);assert.equal(die.position.z,0);assert.ok(Math.abs(die.position.y-(die.userData.restHeight||1.035)-.22)<1e-6)});
+ }
+});
+
+test('a cancelled selection roll cannot write a stale pose',async()=>{
+ const{d}=await board();const die=d.buildDice('Offer',0);die.userData.selectionLabel='Offer';d.render=()=>{};d.animationGeneration=0;
+ let callback;global.requestAnimationFrame=fn=>{callback=fn;return 1};global.cancelAnimationFrame=()=>{};global.matchMedia=()=>({matches:false});
+ const pending=d.castSelection([{label:'Offer',result:'20'}]);d.cancelAnimation();assert.equal(await pending,false);
+ const before=die.position.clone();callback(performance.now()+9999);assert.ok(die.position.equals(before));
+});

@@ -134,7 +134,7 @@
 </head>
 <body>
   <div class="shell">
-    <header class="top"><div class="brand"><strong>TABOK</strong><span>The Crossing · The Balance</span><small class="build-label">v1.5.7 SOLID PASSAGE · Build 2026.09.16.P3</small></div><small class="perf-meter" id="perfMeter" title="Live animation frame rate">FPS —</small><div class="network-pill" id="networkPill">OFFLINE</div><div class="top-status"><b id="roundTop">New expedition</b><span id="phaseTop" class="webgl-status">Raising the 3D ruins…</span></div><button class="new-game" id="newGame">Room</button></header>
+    <header class="top"><div class="brand"><strong>TABOK</strong><span>The Crossing · The Balance</span><small class="build-label">v1.5.8 PHYSICAL DICE + CPU · Build 2026.09.16.D3</small></div><small class="perf-meter" id="perfMeter" title="Live animation frame rate">FPS —</small><div class="network-pill" id="networkPill">OFFLINE</div><div class="top-status"><b id="roundTop">New expedition</b><span id="phaseTop" class="webgl-status">Raising the 3D ruins…</span></div><button class="new-game" id="newGame">Room</button></header>
     <main class="layout">
       <aside class="guide" aria-label="How to play TABOK">
         <div class="character-preview" id="characterPreview"><div class="preview-caption"><strong>Choose a Traveler</strong><span>Live sculpted presence</span></div></div>
@@ -171,8 +171,9 @@
   <div class="overlay hidden" id="messageOverlay"><div class="dialog"><div class="judgment-seal" aria-hidden="true"><span>✦</span></div><div class="eyebrow" id="messageEyebrow">Portal</div><h2 id="messageTitle">The Portal judges</h2><div id="messageBody"></div><button class="primary" id="messageContinue">Continue</button></div></div>
   <div class="crossing-fx hidden" id="crossingFx" aria-live="polite"><div class="crossing-tunnel"></div><div class="crossing-rings"></div><div class="crossing-hero" id="crossingHero"></div><div class="crossing-name" id="crossingName"><small>The Portal accepts</small>Traveler Crosses</div></div>
   <div class="major-summon-fx hidden" id="majorSummonFx" role="status" aria-live="assertive" aria-label="The Major Monster is being summoned"><div class="major-summon-rift"></div><div class="major-summon-sprite" aria-hidden="true"></div><div class="major-summon-flash"></div><div class="major-summon-copy"><small>The fourth rejection breaks the seal</small>The Major Monster Awakens</div></div>
-  <link rel="stylesheet" href="dice-selection.css?v=20260916D2">
-  <script src="dice-selection.js?v=20260916D2"></script>
+  <link rel="stylesheet" href="dice-selection.css?v=20260916D3">
+  <script src="dice-selection.js?v=20260916D3"></script>
+  <script src="cpu-strategy.js?v=20260916D3"></script>
   <script src="balance-rules.js?v=20260915P1"></script>
   <script src="trial-or-die.js?v=20260911T1"></script>
   <script>
@@ -420,7 +421,8 @@
         const reset=document.getElementById('reset3DCamera'),buttons=document.createElement('div'),left=document.createElement('button'),right=document.createElement('button');
         buttons.className='true3d-hud-buttons';left.type=right.type='button';left.id='orbit3DLeft';right.id='orbit3DRight';left.textContent='↶';right.textContent='↷';left.title='Rotate camera left';right.title='Rotate camera right';reset.before(left);reset.after(right);reset.parentElement.classList.add('true3d-hud-controls');
         reset.onclick=()=>webglBoard.resetCamera();left.onclick=()=>webglBoard.orbitCamera(-1);right.onclick=()=>webglBoard.orbitCamera(1);
-        try{const{TabokDice3D}=await import('./true3d-dice.js?v=20260915D1');dice3D=new TabokDice3D(els.turnRollDice)}catch(diceError){console.warn('TABOK physical dice unavailable; using the flat dice fallback.',diceError)}
+        try{const{TabokDice3D}=await import('./true3d-dice.js?v=20260916D3');dice3D=new TabokDice3D(els.turnRollDice)}catch(diceError){console.warn('TABOK physical dice unavailable; using the flat dice fallback.',diceError)}
+        if(game?.phase==='choose'&&!busy){turnRenderKey='';renderTurn()}
         const cameraCanvas=document.getElementById('webglBoard'),cameraHelp=document.querySelector('.true3d-hud>span');
         cameraCanvas.setAttribute('aria-label','Interactive 3D TABOK board. Hold left mouse and drag to orbit. Hold right mouse and drag to move the camera. Use the wheel or pinch to zoom.');
         if(cameraHelp)cameraHelp.innerHTML='<b>3D CAMERA</b> Left-drag to orbit · Right-drag to move · Wheel/pinch to zoom';
@@ -599,26 +601,28 @@
       const choosing=game.phase==='choose',rolling=game.phase==='roll';
       if(!p||(!choosing&&!rolling)){els.turnRoll.className='turn-roll-overlay hidden';dice3D?.hide();return}
       if(choosing&&!game.turn)game.turn={type:'SELECTED',selectedDice:[],path:[],portal:false,gateway:null};
-      const allowed=window.TabokDiceSelection.available(p),selected=window.TabokDiceSelection.normalize(game.turn?.selectedDice,allowed),visible=p.controller!=='cpu'&&canPresentTurnRoll(p);
+      if(choosing&&p.controller==='cpu')game.turn.selectedDice=chooseCPUDice(p);
+      const allowed=window.TabokDiceSelection.available(p),selected=window.TabokDiceSelection.normalize(game.turn?.selectedDice,allowed),visible=canPresentTurnRoll(p);
       if(choosing)game.turn.selectedDice=selected;
       dice3D?.hide();
       els.turnRoll.className='turn-roll-overlay dice-picking'+(visible?'':' hidden');
       els.turnRoll.style.setProperty('--pc',p.color);
       els.turnRollKicker.textContent='TABOK · Round '+game.round;
       els.turnRollName.textContent=p.name;
-      els.turnRollRole.textContent='Choose your dice';
+      els.turnRollRole.textContent=p.controller==='cpu'?'CPU turn · '+(p.strategy||'Balanced'):'Choose your dice';
       els.turnRollStatus.textContent=selected.length?selected.length+' selected · ready to roll':'Select any of your '+allowed.length+' available dice';
-      window.TabokDiceSelection.mount(els.turnRollDice,els.turnRollControl,selected,toggleTurnDie,rollSelectedDice,allowed);
+      window.TabokDiceSelection.mount(els.turnRollDice,els.turnRollControl,selected,toggleTurnDie,rollSelectedDice,allowed,{renderer:visible?dice3D:null,faces:{Movement:MOVE,Treasure:TREASURE_FACES,Rune:RUNE_FAMILIES[p.runeFamily||'WAYFARER']}});
+      if(p.controller==='cpu'){els.turnRoll.querySelectorAll('button').forEach(button=>button.disabled=true);els.turnRollControl.querySelector('button').textContent=rolling?'CPU ROLLING…':'CPU PREPARING ROLL'}
     }
     function toggleTurnDie(name){
-      if(busy||!game||game.phase!=='choose'||!window.TabokDiceSelection.available(active()).includes(name))return;
+      if(busy||!game||game.phase!=='choose'||active().controller==='cpu'||!window.TabokDiceSelection.available(active()).includes(name))return;
       const selection=game.turn?.selectedDice||[];
       game.turn.selectedDice=window.TabokDiceSelection.normalize(selection.includes(name)?selection.filter(value=>value!==name):[...selection,name],window.TabokDiceSelection.available(active()));
       renderAll();
       els.turnRollDice.querySelector('[data-dice-choice="'+name+'"]')?.focus({preventScroll:true});
     }
-    async function rollSelectedDice(){
-      if(busy||!game||game.phase!=='choose')return;
+    async function rollSelectedDice(automated=false){
+      if(busy||!game||game.phase!=='choose'||(active().controller==='cpu'&&automated!==true))return;
       const selected=window.TabokDiceSelection.normalize(game.turn?.selectedDice,window.TabokDiceSelection.available(active()));
       if(!selected.length)return;
       game.turn={type:'SELECTED',selectedDice:selected,path:[],portal:false,gateway:null};
@@ -677,11 +681,23 @@
     function boardDistance(start,goal,includePortal=false){if(start===goal)return 0;const queue=[[start,0]],seen=new Set([start]);while(queue.length){const item=queue.shift();for(const next of graphNeighbors(item[0],includePortal)){if(next===goal)return item[1]+1;if(next!=='PORTAL'&&!seen.has(next)){seen.add(next);queue.push([next,item[1]+1])}}}return Infinity}
     function humanDestinationPlans(p,maxSteps){const queue=[[p.pos,[]]],seen=new Set([p.pos]),routes=new Map();while(queue.length){const[current,path]=queue.shift();if(path.length>=maxSteps)continue;for(const next of graphNeighbors(current,true)){if(hexOccupied(next,p,null))continue;const route=[...path,next];if(next==='PORTAL'){if(!routes.has('PORTAL'))routes.set('PORTAL',route);continue}if(seen.has(next))continue;seen.add(next);routes.set(next,route);queue.push([next,route])}}const steps=routes.size?Math.max(...[...routes.values()].map(route=>route.length)):0;return{steps,routes}}
     function exactAIPath(start,steps,goal,includePortal=false,traveler=null){traveler=traveler||game.players.find(p=>p.status==='active'&&p.pos===start)||null;const path=[];let visits=0;function visit(current,left){if(++visits>6000)return false;if(left===0)return current===goal;const options=graphNeighbors(current,includePortal).filter(n=>!hexOccupied(n,traveler,null)&&(n!=='PORTAL'||left===1)).sort((a,b)=>(a==='PORTAL'?0:boardDistance(a,goal,includePortal))-(b==='PORTAL'?0:boardDistance(b,goal,includePortal)));for(const next of options){path.push(next);if(visit(next,left-1))return true;path.pop()}return false}return visit(start,steps)?[...path]:null}
-    function nearestAIRune(p){if(p.rune)return null;const choices=[...game.runes].filter(([,count])=>count>0).map(([position])=>({position,distance:boardDistance(p.pos,position)})).sort((a,b)=>a.distance-b.distance);return choices[0]||null}
-    function aiHeadsPortal(p,action){const total=p.inventory.reduce((a,b)=>a+b,0)+(action==='TAKE'?1:0);if(p.strategy==='Rusher')return true;if(p.strategy==='Balanced'||p.strategy==='Defensive')return total>=5;return total>=6&&Math.min(...p.inventory)>=1}
-    function chooseAIGoal(p,action){const portalDistance=boardDistance(p.pos,'PORTAL',true),rune=nearestAIRune(p);if(rune&&rune.distance<=Math.max(6,portalDistance))return rune.position;return aiHeadsPortal(p,action)?'PORTAL':'PORTAL'}
-    function scheduleCPU(){clearTimeout(cpuTimer);cpuTimer=null;if(!game||busy||game.phase==='ended'||!els.message.classList.contains('hidden'))return;const p=active(),run=()=>{cpuTimer=null;if(game.phase==='choose'){game.turn=game.turn||{type:'SELECTED'};game.turn.selectedDice=['Movement','Treasure',...(p.rune&&Math.random()<.4?['Rune']:[]),...(p.inventory.some(count=>count>0)&&Math.random()<.35?['Offer']:[])];rollSelectedDice()}else if(game.phase==='roll')rollTurn();else if(game.phase==='move')cpuMove();else if(game.phase==='treasure')chooseTreasureReward(leastHeldTreasureIndex(p));else if(game.phase==='offer'){const options=[0,1,2].filter(i=>p.inventory[i]>0),target=bestOfferRecipient(p),discard=!target||Math.random()<.08;if(options.length)offerTreasure(pick(options),discard?null:target,discard);else finishOffering()}};if(game.phase==='monster'){cpuTimer=setTimeout(()=>{cpuTimer=null;resolveMonsterPhase()},timing(650,'cpu'));return}if(!p||p.controller!=='cpu')return;cpuTimer=setTimeout(run,timing(500,'cpu'))}
-    function cpuMove(){const p=active();if(!game.turn.goal)game.turn.goal=chooseAIGoal(p,game.turn.action);const includePortal=game.turn.goal==='PORTAL',portalRoute=includePortal?humanDestinationPlans(p,game.turn.remaining).routes.get('PORTAL'):null,exact=portalRoute||exactAIPath(p.pos,game.turn.remaining,game.turn.goal,includePortal,p);let next=exact&&exact[0];if(!next){const options=playerNeighbors(p);if(!options.length){addLog(p.name+' had no open adjacent hex and stopped early.');finishMovement();return}const best=Math.min(...options.map(x=>boardDistance(x,game.turn.goal,includePortal)));next=pick(options.filter(x=>boardDistance(x,game.turn.goal,includePortal)===best))}if(next==='PORTAL')choosePortal(true);else chooseHex(next,true)}
+    function aiDistances(p,start){const distances=new Map([[start,0]]),queue=[start];for(let i=0;i<queue.length;i++){const from=queue[i];for(const next of from==='PORTAL'?[...gateway]:graphNeighbors(from,true)){if(distances.has(next)||hexOccupied(next,p,null))continue;distances.set(next,distances.get(from)+1);if(next!=='PORTAL'||start==='PORTAL')queue.push(next)}}return distances}
+    function nearestAIRune(p){if(p.rune)return null;const distances=aiDistances(p,p.pos),choices=[...game.runes].filter(([position,count])=>count>0&&distances.has(position)).map(([position])=>({position,distance:distances.get(position)})).sort((a,b)=>a.distance-b.distance);return choices[0]||null}
+    function aiHeadsPortal(p,action){const inventory=p.inventory.slice();if(game.turn?.treasure==='CHOOSE')inventory[window.TabokCPU.treasureIndex(inventory)]++;const total=inventory.reduce((a,b)=>a+b,0);return p.life<=1||inventory.every(n=>n===1)||(p.strategy==='Rusher'&&total>=2)||(game.round>=8&&total>0)}
+    function chooseAIGoal(p,action){const rune=nearestAIRune(p);if(!aiHeadsPortal(p,action)&&rune&&rune.distance<=6&&aiThreat(p,rune.position)<5)return rune.position;return 'PORTAL'}
+    function chooseCPUDice(p){return window.TabokCPU.selectDice(p,aiDistances(p,p.pos).get('PORTAL')??Infinity)}
+    function aiThreat(p,id){if(id==='PORTAL')return 0;let score=0;for(const monster of game.monsters){if(monster.bound)continue;const distance=boardDistance(id,monster.pos);if(distance<=1)score+=monster.major?18:8;else if(distance<=3)score+=monster.major?5:2;if(!monster.major&&cells.get(id)===cells.get(monster.pos))score+=2}return score*(p.life<=2?1.8:p.strategy==='Defensive'?1.4:1)}
+    function chooseCPURoute(p){
+      const plans=humanDestinationPlans(p,game.turn.remaining),goal=chooseAIGoal(p,game.turn.action),distances=aiDistances(p,goal),ready=aiHeadsPortal(p,game.turn.action);
+      game.turn.goal=goal;
+      if(ready&&plans.routes.has('PORTAL'))return plans.routes.get('PORTAL');
+      const threat=new Map(),risk=id=>{if(!threat.has(id))threat.set(id,aiThreat(p,id));return threat.get(id)};
+      const candidates=[...plans.routes].filter(([id])=>id!=='PORTAL').map(([id,route])=>({route,score:(distances.get(id)??100)*2+risk(id)*2+route.reduce((sum,step)=>sum+risk(step)*.15+(game.turn.path.includes(step)?1.5:0),0)+(id===goal?-5:0)}));
+      candidates.sort((a,b)=>a.score-b.score||a.route.length-b.route.length);
+      return candidates[0]?.route||[];
+    }
+    function scheduleCPU(){clearTimeout(cpuTimer);cpuTimer=null;if(!game||busy||game.phase==='ended'||!els.message.classList.contains('hidden'))return;const p=active(),run=()=>{cpuTimer=null;if(game.phase==='choose'){game.turn=game.turn||{type:'SELECTED'};game.turn.selectedDice=chooseCPUDice(p);rollSelectedDice(true)}else if(game.phase==='roll')rollTurn();else if(game.phase==='move')cpuMove();else if(game.phase==='treasure')chooseTreasureReward(window.TabokCPU.treasureIndex(p.inventory));else if(game.phase==='offer'){const choice=window.TabokCPU.offerChoice(p,offerRecipients(p));if(choice)offerTreasure(choice.index,choice.target,choice.discard);else finishOffering()}};if(game.phase==='monster'){cpuTimer=setTimeout(()=>{cpuTimer=null;resolveMonsterPhase()},timing(650,'cpu'));return}if(!p||p.controller!=='cpu')return;cpuTimer=setTimeout(run,timing(650,'cpu'))}
+    function cpuMove(){const p=active(),turn=game.turn;if(!turn.cpuRoute?.length||hexOccupied(turn.cpuRoute[0],p,null)||(p.rune&&turn.goal!=='PORTAL'))turn.cpuRoute=chooseCPURoute(p);const next=turn.cpuRoute.shift();if(!next){turn.remaining=0;addLog(p.name+' had no open route and stopped early.');finishMovement();return}if(next==='PORTAL')choosePortal(true);else if(playerNeighbors(p).includes(next))chooseHex(next,true);else{turn.cpuRoute=[];cpuMove()}}
     function cpuAction(){const p=active();if(game.turn.action==='TAKE'){const choices=[0,1,2].filter(i=>game.supply[i]>0&&p.inventory[i]<3);if(choices.length){const min=Math.min(...choices.map(i=>p.inventory[i]));take(pick(choices.filter(i=>p.inventory[i]===min)));return}}else if(game.turn.action==='GIVE'){const options=[];eligiblePlayers(p).forEach(target=>[0,1,2].forEach(i=>{if(p.inventory[i]>0&&target.inventory[i]<3)options.push({target,i,score:p.inventory[i]-target.inventory[i]})}));if(options.length){const best=Math.max(...options.map(o=>o.score)),choice=pick(options.filter(o=>o.score===best));give(choice.target,choice.i);return}}else if(game.turn.action==='STEAL'){const options=[];eligiblePlayers(p).forEach(target=>[0,1,2].forEach(i=>{if(target.inventory[i]>0&&p.inventory[i]<3)options.push({target,i,score:3-p.inventory[i]})}));if(options.length){const best=Math.max(...options.map(o=>o.score)),choice=pick(options.filter(o=>o.score===best));steal(choice.target,choice.i);return}}addLog(p.name+' had no legal '+game.turn.action+' and continued.');completeAction()}
     function automationAuthority(){return typeof window.TabokCanRunAutomation==='function'?window.TabokCanRunAutomation():true}
     function queueAutomatedTreasureAction(){const turn=game?.turn;if(!turn||turn.autoActionResolveState||!automationAuthority())return;turn.autoActionResolveState='queued';const attempt=()=>{actionAutoTimer=null;if(!game||game.phase!=='action'||game.turn!==turn)return;if(!automationAuthority()){turn.autoActionResolveState=null;return}if(busy){actionAutoTimer=setTimeout(attempt,120);return}turn.autoActionResolveState='running';turn.autoChoiceQueued=false;cpuAction()};actionAutoTimer=setTimeout(attempt,timing(430,'cpu'))}
@@ -842,7 +858,7 @@
   </script>
   <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="network-config.js?v=20260903U1"></script>
-  <script src="multiplayer.js?v=20260916P3"></script>
+  <script src="multiplayer.js?v=20260916D3"></script>
   <script src="ritual-redesign.js?v=20260905A3"></script>
 </body>
 </html>

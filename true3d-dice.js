@@ -62,7 +62,7 @@ export class TabokDice3D {
   constructor(host) {
     this.host = host;
     this.canvas = document.createElement('canvas');
-    this.canvas.className = 'fate-dice-canvas'; this.canvas.setAttribute('aria-label', 'Physical 3D Movement, Action, and Rune dice');
+    this.canvas.className = 'fate-dice-canvas'; this.canvas.setAttribute('aria-label', 'Physical 3D dice');
     host.before(this.canvas); host.classList.add('fate-dice-fallback');
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(34, 2.2, .1, 50); this.camera.position.set(0, 7.2, 8.6); this.camera.lookAt(0, .55, 0);
@@ -82,12 +82,15 @@ export class TabokDice3D {
   }
 
   makeTray() {
+    this.trayParts = [];
     const tray = new THREE.Mesh(new RoundedBoxGeometry(11.5, .24, 7.5, 3, .1), new THREE.MeshStandardMaterial({ color: 0x171922, roughness: .96 }));
     tray.name = 'Dice rolling tray'; tray.position.y = -.12; tray.receiveShadow = true; this.scene.add(tray);
+    this.trayParts.push(tray);
     const rim = new THREE.MeshStandardMaterial({ color: 0x383642, roughness: .63, metalness: .15 });
     for (const [x,z,w,d] of [[-5.6,0,.18,7.5],[5.6,0,.18,7.5],[0,-3.65,11.3,.18],[0,3.65,11.3,.18]]) {
       const wall = new THREE.Mesh(new RoundedBoxGeometry(w,.28,d,2,.04), rim);
       wall.position.set(x,.12,z); wall.castShadow = wall.receiveShadow = true; this.scene.add(wall);
+      this.trayParts.push(wall);
     }
   }
 
@@ -166,6 +169,7 @@ export class TabokDice3D {
   }
 
   prepare(specs, color = '#9d62d4') {
+    this.leaveSelection();
     if (!this.supports(specs)) return false;
     const signature=specs.map(spec=>spec.label+':'+(spec.faces||[]).join(',')).join('|');
     if(signature===this.preparedSignature&&this.dice.length===specs.length){
@@ -185,7 +189,7 @@ export class TabokDice3D {
     const normal=die.userData.faceNormals?.[face]||FACE_NORMALS[face];
     const align = new THREE.Quaternion().setFromUnitVectors(normal, new THREE.Vector3(0, 1, 0));
     const turns = this.dice.length === 3 ? [.16,0,-.16] : this.dice.length === 2 ? [.14,-.16] : [0];
-    const turn = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turns[index]);
+    const turn = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turns[index] || 0);
     return turn.multiply(align);
   }
 
@@ -260,7 +264,105 @@ export class TabokDice3D {
     });
   }
 
-  hide() { this.cancelAnimation(); this.canvas.classList.remove('active', 'casting', 'revealed', 'rune-claim-3d'); }
+  // One GPU canvas, with a fixed viewport for each accessible selection button.
+  // These are the same cached ceramic meshes and D20 used by the original tray.
+  showSelection(specs, selected) {
+    this.cancelAnimation();
+    const signature='selection|'+specs.map(s=>s.label+':'+(s.faces||[]).join(',')).join('|');
+    if(signature!==this.preparedSignature){
+      this.clearDice();specs.forEach(s=>this.buildDice(s.label,0,s.faces));
+      this.preparedSignature=signature;
+    }
+    this.selectionMode=true;
+    this.host.append(this.canvas);this.host.classList.add('ds-physical');
+    this.canvas.classList.add('selection-canvas','active');
+    this.trayParts.forEach(part=>part.visible=false);
+    if(!this.selectionFloor){
+      this.selectionFloor=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.ShadowMaterial({opacity:.22}));
+      this.selectionFloor.rotation.x=-Math.PI/2;this.selectionFloor.receiveShadow=true;this.scene.add(this.selectionFloor);
+      this.selectionCamera=new THREE.OrthographicCamera(-3,3,3,-3,.1,50);
+      this.selectionCamera.position.set(0,7,8);this.selectionCamera.lookAt(0,1,0);
+    }
+    this.selectionFloor.visible=true;this.rim.intensity=8;
+    this.dice.forEach((die,index)=>{
+      this.resetDieGlow(die);die.visible=true;
+      die.userData.selected=selected.includes(specs[index].label);
+      die.userData.selectionLabel=specs[index].label;
+      die.position.set(0,(die.userData.restHeight||1.035)+(die.userData.selected ? .22 : 0),0);
+      die.quaternion.copy(this.targetQuaternion(die,die.userData.labels[0],index));
+      die.rotateY(.18);
+    });
+    this.resize();return true;
+  }
+
+  leaveSelection() {
+    if(!this.selectionMode)return;
+    this.selectionMode=false;this.host.before(this.canvas);
+    this.host.classList.remove('ds-physical');this.canvas.classList.remove('selection-canvas');
+    this.trayParts.forEach(part=>part.visible=true);this.selectionFloor.visible=false;
+    this.dice.forEach(die=>die.visible=true);
+    this.renderer.setScissorTest(false);this.renderer.autoClear=true;
+  }
+
+  async castSelection(specs) {
+    this.cancelAnimation();
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const rolls=specs.map(spec=>{
+      const die=this.dice.find(d=>d.userData.selectionLabel===spec.label);
+      if(!die)throw new Error('Unavailable selection die');
+      const start={position:die.position.clone(),quaternion:die.quaternion.clone()};
+      const target=this.targetQuaternion(die,spec.result,0);
+      let plan=null;
+      if(!reduced){try{plan=simulateDiceThrow([die])}catch(error){/* Keep the already chosen rules result. */}}
+      return {die,start,plan,target};
+    });
+    this.selectionRolls=rolls;
+    return this.selectionTween(reduced?0:900,t=>{
+      rolls.forEach(({die,start,plan,target})=>{
+        if(plan){
+          const pose=sampleDiceThrow(plan,Math.max(0,(t-.12)/.88))[0];
+          const end=plan.frames.at(-1)[0].position;
+          // Compact the launch into its own slot: physical spin and bounce,
+          // with no roaming into a stationary neighbour or a camera movement.
+          const rest=die.userData.restHeight||1.035;
+          const position=new THREE.Vector3((pose.position.x-end.x)*.12,rest+(pose.position.y-rest)*.42,.48+(pose.position.z-end.z)*.12);
+          const enter=Math.min(1,t/.12);
+          die.position.copy(start.position).lerp(position,enter);
+          die.quaternion.copy(start.quaternion).slerp(pose.quaternion,enter);
+        }else{
+          die.position.set(0,die.userData.restHeight||1.035,.48);die.quaternion.copy(target);
+        }
+      });
+      if(t===1)rolls.forEach(({die})=>{
+        const material=die.userData.resultMaterials?.[die.userData.resultFace]||die.material?.[die.userData.resultFace];
+        material?.emissive?.set(0xffdfab);if(material)material.emissiveIntensity=.22;
+      });
+    });
+  }
+
+  returnSelection() {
+    const rolls=this.selectionRolls||[],starts=rolls.map(({die})=>die.position.clone());
+    rolls.forEach(({die})=>this.resetDieGlow(die));
+    return this.selectionTween(matchMedia('(prefers-reduced-motion: reduce)').matches?0:180,t=>{
+      rolls.forEach(({die},i)=>die.position.copy(starts[i]).lerp(new THREE.Vector3(0,(die.userData.restHeight||1.035)+(die.userData.selected ? .22 : 0),0),1-(1-t)**3));
+    });
+  }
+
+  selectionTween(duration,update) {
+    const generation=this.animationGeneration,begun=performance.now();
+    return new Promise(resolve=>{
+      this.pendingResolve=resolve;
+      const frame=now=>{
+        if(generation!==this.animationGeneration)return;
+        const t=duration?Math.min(1,(now-begun)/duration):1;update(t);this.render();
+        if(t<1){this.animationFrame=requestAnimationFrame(frame);return}
+        this.animationFrame=null;this.pendingResolve=null;resolve(true);
+      };
+      this.animationFrame=requestAnimationFrame(frame);
+    });
+  }
+
+  hide() { this.cancelAnimation(); this.leaveSelection(); this.canvas.classList.remove('active', 'casting', 'revealed', 'rune-claim-3d'); }
 
   resize() {
     const width = Math.max(1, this.canvas.clientWidth || 720), height = Math.max(1, this.canvas.clientHeight || 300);
@@ -270,5 +372,23 @@ export class TabokDice3D {
     this.camera.updateProjectionMatrix(); this.render();
   }
 
-  render() { this.renderer.render(this.scene, this.camera); }
+  render() {
+    if(!this.selectionMode){this.renderer.render(this.scene,this.camera);return}
+    const bounds=this.canvas.getBoundingClientRect();if(!bounds.width||!bounds.height)return;
+    this.renderer.autoClear=false;this.renderer.setScissorTest(false);this.renderer.clear();this.renderer.setScissorTest(true);
+    this.dice.forEach(die=>die.visible=false);
+    for(const die of this.dice){
+      const stage=this.host.querySelector('[data-dice-choice="'+die.userData.selectionLabel+'"] .ds-stage');
+      if(!stage)continue;
+      const box=stage.getBoundingClientRect(),w=box.width,h=box.height;
+      if(!w||!h)continue;
+      const unit=2.8/Math.min(82,w*.68),camera=this.selectionCamera;
+      camera.left=-w*unit/2;camera.right=w*unit/2;camera.top=h*unit/2;camera.bottom=-h*unit/2;camera.updateProjectionMatrix();
+      this.renderer.setViewport(box.left-bounds.left,bounds.bottom-box.bottom,w,h);
+      this.renderer.setScissor(box.left-bounds.left,bounds.bottom-box.bottom,w,h);
+      die.visible=true;this.renderer.render(this.scene,camera);die.visible=false;
+    }
+    this.dice.forEach(die=>die.visible=true);this.renderer.setScissorTest(false);
+    this.renderer.setViewport(0,0,bounds.width,bounds.height);
+  }
 }

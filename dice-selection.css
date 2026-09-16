@@ -8,6 +8,16 @@
 .dice-picking .turn-roll-role{font:13px/1.5 system-ui!important;color:#c0b7c7!important;text-transform:none!important;letter-spacing:0!important}
 .dice-picking .turn-roll-status{font:12px/1.5 system-ui!important;color:#b9a9c4!important;text-align:center;margin:14px 0 0!important;min-height:18px;text-transform:none!important;letter-spacing:0!important}
 .dice-picking #turnRollDice{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;min-height:0!important;margin:0!important;position:relative!important;pointer-events:auto!important}
+.dice-picking #turnRollDice.ds-physical .selection-canvas{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;border:0!important;pointer-events:none!important;background:transparent!important;opacity:1!important;visibility:visible!important;animation:none!important;transform:none!important;z-index:2}
+.ds-physical .ds-lift,.ds-physical .ds-shadow{visibility:hidden}
+.ds-physical .ds-stage::after{content:'';position:absolute;left:50%;top:50%;width:min(94px,90%);height:94px;border:1px solid transparent;border-radius:17px;transform:translate(-50%,-50%);pointer-events:none}
+.ds-physical .ds-option[aria-pressed=true] .ds-stage::after{border-color:var(--accent);box-shadow:0 0 7px color-mix(in srgb,var(--accent),transparent 75%);transform:translate(-50%,calc(-50% - 7px))}
+.ds-physical .ds-option.is-result .ds-stage::after{border-color:#ffe2b6}
+.dice-picking .turn-roll-dialog,.dice-picking .ds-roll{clip-path:none!important}
+.dice-picking .ds-option::before,.dice-picking .ds-option::after,.dice-picking .ds-roll::before,.dice-picking .ds-roll::after{display:none!important}
+.dice-picking .ds-name,.dice-picking .ds-indicator,.dice-picking .ds-result{text-transform:none!important;letter-spacing:normal!important}
+.dice-picking .ds-indicator{white-space:nowrap}
+.turn-roll-overlay.dice-picking .ds-option:hover,.turn-roll-overlay.dice-picking .ds-option:focus,.turn-roll-overlay.dice-picking .ds-option[aria-pressed=true]{background:transparent!important}
 .dice-selection-row{display:grid;grid-template-columns:repeat(var(--dice-count,2),minmax(0,1fr));gap:12px;width:100%;padding:14px 0 18px}
 .ds-option{--die-size:68px;--half:34px;--accent:#b59bdd;--face:#342843;--edge:#7d639a;position:relative;display:flex;flex-direction:column;align-items:center;min-width:0!important;padding:0 2px!important;border:0!important;border-radius:8px!important;background:transparent!important;box-shadow:none!important;color:#eee6f6!important;cursor:pointer;transform:none!important;text-shadow:none!important;filter:none!important;clip-path:none!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .ds-treasure{--accent:#e2c48a;--face:#443421;--edge:#987b49}.ds-rune{--accent:#9bc9cb;--face:#243c40;--edge:#608c90}
