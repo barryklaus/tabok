@@ -10,6 +10,19 @@ function setup(){
  vm.createContext(ctx);vm.runInContext(source,ctx);ctx.game=ctx.newState();return ctx;
 }
 test('real board setup preserves six shrines and statues and places 18 non-overlapping treasures',()=>{const c=setup(),s=c.game;assert.equal(s.boardTreasures.length,18);assert.equal(new Set(s.boardTreasures.map(t=>t.pos)).size,18);for(const t of s.boardTreasures){assert.ok(c.playable.has(t.pos));assert.ok(!c.RUNE_SITES.includes(t.pos));assert.ok(!c.JUDGE_SITES.includes(t.pos))}assert.equal(s.boardTreasures.filter(t=>t.common===0).length,6);assert.equal(s.boardTreasures.filter(t=>t.common===1).length,6);assert.equal(s.supply,undefined)});
+test('HEX-v2 fixes the exact marked hexes and preserves sixfold symmetry for each treasure type',()=>{
+ const c=setup(),items=c.game.boardTreasures;
+ const expected=[
+  ['-4,7','4,3','8,7','4,15','-4,19','-8,15'],
+  ['0,5','6,5','6,11','0,17','-6,17','-6,11'],
+  ['-2,9','2,7','4,9','2,13','-2,15','-4,13']
+ ];
+ const groups=[items.filter(t=>t.kind==='artifact'),items.filter(t=>t.common===0),items.filter(t=>t.common===1)];
+ groups.forEach((group,i)=>{
+  const positions=Array.from(group,t=>t.pos);assert.deepEqual(positions,expected[i]);
+  for(const pos of positions){const[q,r]=pos.split(',').map(Number);assert.ok(positions.includes((11-r)+','+(q+r)),'rotated marker stays in its group')}
+ });
+});
 test('dormant statues block movement and nearest awakening does not overlap or assume numeric order',()=>{const c=setup();assert.ok(c.hexOccupied(c.JUDGE_SITES[4]));assert.deepEqual(Array.from(c.awakenDormantJudges(1,'-3,7')),['M5']);assert.deepEqual(Array.from(c.game.awakeStatues),[5]);assert.equal(c.game.monsters[0].pos,c.JUDGE_SITES[4]);assert.ok(c.hexOccupied(c.JUDGE_SITES[4]));assert.ok(c.hexOccupied(c.JUDGE_SITES[0]));});
 test('step collection updates named inventory and wakes only one sleeping statue',async()=>{const c=setup(),p=c.active(),item=c.game.boardTreasures[0];p.pos=item.pos;await c.collectEquipment(p);assert.equal(p.artifacts[0],item.name);assert.equal(item.pos,null);assert.equal(c.game.dormantJudges,5);await c.collectEquipment(p);assert.equal(c.game.dormantJudges,5)});
 test('Portal rejection never wakes a statue or consumes inventory',()=>{const c=setup(),p=c.active();p.inventory=[1,1,0];c.game.pendingPortal={p,success:false};c.finalizeBalancePortal();assert.equal(c.game.dormantJudges,6);assert.deepEqual(p.inventory,[1,1,0])});

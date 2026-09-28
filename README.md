@@ -1,6 +1,12 @@
 # TABOK — The Crossing
 
-Version: **v2.0.0 — Riddle Crossing · 2026.09.28.R1**
+Version: **v2.0.1 — HEX-v2 Placement · 2026.09.28.R2**
+
+## v2.0.1 — HEX-v2 Placement
+
+- Starting treasure hexes now match the user's HEX-v2.png exactly: six outer T-U artifact sites, six T-1 Sun Shard sites and six inner T-2 Moon Pearl sites. The six Rune sites, six statue sites and player entrances are unchanged.
+- Artifact identities still shuffle at the six fixed starting sites. Common treasures refresh at their marked sites; artifacts returned after crossing, death or discard still respawn on random free hexes.
+- Explicit coordinates replace the approximate rings and nearest-free fallback. Regression tests lock all 18 positions and verify their sixfold symmetry and separation from reserved hexes.
 
 ## v2.0.0 — Riddle Crossing
 

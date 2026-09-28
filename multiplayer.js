@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v2.0.0 Riddle Crossing · R1';
+  const VERSION = 'v2.0.1 HEX-v2 Placement · R2';
   const TOKEN_KEY = 'tabok-multiplayer-token';
   const NAME_KEY = 'tabok-multiplayer-name';
   const ACTIVE_ROOM_KEY = 'tabok-active-guest-room';

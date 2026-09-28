@@ -4,10 +4,21 @@
   const T=window.TabokTreasure,oldNewState=newState,oldCollect=collectEquipment,oldRenderPlayers=renderPlayers,oldEquipment=renderEquipment,oldCross=cross,oldKill=kill,oldRune=applyCanonicalRune;
   const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   TREASURES.splice(0,3,{name:T.COMMONS[0],short:'S',cls:'relic'},{name:T.COMMONS[1],short:'M',cls:'oddity'},{name:'Artifacts',short:'A',cls:'keepsake'});
-  function ring(q,r){const a=[];for(let i=0;i<6;i++){a.push(key(q,r+11));[q,r]=[-r,q+r]}return a}
-  function sites(){const used=new Set([...RUNE_SITES,...JUDGE_SITES,...entries]);return [...ring(0,-7),...ring(0,-5),...ring(2,-5)].map(pos=>{if(!playable.has(pos)||used.has(pos))pos=[...playable].filter(x=>!used.has(x)).sort((a,b)=>boardDistance(a,pos)-boardDistance(b,pos))[0];used.add(pos);return pos})}
+  // Exact HEX-v2.png markers, clockwise from the upper-left artifact / top Sun.
+  // Axial coordinates use the existing Portal center at (0, 11).
+  const STARTING_SITES=Object.freeze({
+    artifacts:Object.freeze(['-4,7','4,3','8,7','4,15','-4,19','-8,15']),
+    sunShards:Object.freeze(['0,5','6,5','6,11','0,17','-6,17','-6,11']),
+    moonPearls:Object.freeze(['-2,9','2,7','4,9','2,13','-2,15','-4,13'])
+  });
+  function sites(){
+    const positions=[...STARTING_SITES.artifacts,...STARTING_SITES.sunShards,...STARTING_SITES.moonPearls];
+    const reserved=new Set([...RUNE_SITES,...JUDGE_SITES,...entries]);
+    if(new Set(positions).size!==18||positions.some(pos=>!playable.has(pos)||reserved.has(pos)))throw new Error('HEX-v2 treasure placement conflicts with the board');
+    return positions;
+  }
   newState=function(...args){const state=oldNewState(...args),positions=sites();let last=null;try{last=localStorage.getItem('tabok-last-riddle')}catch(_){}const setup=T.expedition(window.TabokRiddles,positions.slice(0,6),Math.random,last);try{localStorage.setItem('tabok-last-riddle',setup.riddle.id)}catch(_){}
-    state.rulesVersion='2.0.0-R1';state.crossing={...setup.riddle,riddle:setup.riddle.phrase,name:'THE RIDDLE CROSSING'};state.selectedArtifacts=setup.selected;state.boardTreasures=[...setup.items,...positions.slice(6).map((pos,i)=>({id:'common-'+i,kind:'common',common:i<6?0:1,name:T.COMMONS[i<6?0:1],pos,readyRound:1}))];state.awakeStatues=[];state.rejectedArtifacts=[];delete state.supply;state.players.forEach(p=>p.artifacts=[]);return state};
+    state.rulesVersion='2.0.1-R2';state.crossing={...setup.riddle,riddle:setup.riddle.phrase,name:'THE RIDDLE CROSSING'};state.selectedArtifacts=setup.selected;state.boardTreasures=[...setup.items,...positions.slice(6).map((pos,i)=>({id:'common-'+i,kind:'common',common:i<6?0:1,name:T.COMMONS[i<6?0:1],pos,readyRound:1}))];state.awakeStatues=[];state.rejectedArtifacts=[];delete state.supply;state.players.forEach(p=>p.artifacts=[]);return state};
   const actorOccupied=hexOccupied;
   hexOccupied=function(id,exceptPlayer=null,exceptMonster=null){return actorOccupied(id,exceptPlayer,exceptMonster)||Boolean(game?.awakeStatues&&JUDGE_SITES.some((site,i)=>site===id&&!game.awakeStatues.includes(i+1)))};
   function respawnSites(){return [...playable].filter(id=>!hexOccupied(id)&&!game.runes.has(id))}
