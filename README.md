@@ -1,6 +1,12 @@
 # TABOK — The Crossing
 
-Version: **v2.0.1 — HEX-v2 Placement · 2026.09.28.R2**
+Version: **v2.0.2 — Portal Whisper · 2026.09.28.R3**
+
+## v2.0.2 — Portal Whisper
+
+- The floating riddle is hidden until the Portal is hovered or clicked. A restrained 360 ms fade and rise reveals it; leaving fades it away in 260 ms. Touch taps reveal it for 6.5 seconds, and tapping elsewhere dismisses it.
+- No particles, camera movement or gameplay changes. Portal-entry clicks still work, orbit drags do not trigger a reveal, and reduced-motion mode shows/hides it without movement. The ledger remains available for reading at any time.
+- Validation: 106 automated checks pass. Browser screenshots confirmed the hidden, revealed and dismissed states with no reported browser errors; touch timing and reduced motion are covered by automated tests.
 
 ## v2.0.1 — HEX-v2 Placement
 

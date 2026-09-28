@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PortalRiddleReveal } from './portal-riddle.js?v=20260928R3';
 import { createTreasureModel } from './treasure-models.js?v=20260928R1';
 import { createGuardianStatue } from './guardian-statues.js?v=20260915P1';
 import { createCosmicSanctuary } from './cosmic-sanctuary.js?v=20260915D2';
@@ -335,6 +336,7 @@ export class TabokTrue3DBoard {
     this.startedAt = performance.now();
     this.pointerStart = null;
     this.hovered = null;
+    this.riddleReveal = new PortalRiddleReveal();
     this.stateSignature = '';
     this.portalState = 'idle';
     this.quality = 'full';
@@ -880,9 +882,10 @@ export class TabokTrue3DBoard {
     this.pointer = new THREE.Vector2();
     this.canvas.addEventListener('pointerdown', event => { this.pointerStart = { x: event.clientX, y: event.clientY, button: event.button }; });
     this.canvas.addEventListener('pointermove', event => {
-      if (this.pointerStart && Math.hypot(event.clientX - this.pointerStart.x, event.clientY - this.pointerStart.y) > 5) return;
+      if (this.pointerStart && Math.hypot(event.clientX - this.pointerStart.x, event.clientY - this.pointerStart.y) > 5) { this.riddleReveal.dismiss(); return; }
       const hit = this.pick(event);
       const id = this.actorIdForHit(hit) || this.idForHit(hit);
+      if(event.pointerType!=='touch')this.riddleReveal.hover(id==='PORTAL');
       if (id !== this.hovered) {
         this.hovered = id;
         this.canvas.style.cursor = id ? 'pointer' : 'grab';
@@ -899,15 +902,19 @@ export class TabokTrue3DBoard {
       this.pointerStart = null;
       if (!start || start.button !== 0 || event.button !== 0 || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
       const hit = this.pick(event);
-      if (!hit) return;
+      if (!hit) { this.riddleReveal.dismiss(); return; }
       const id = this.idForHit(hit), actorId = this.actorIdForHit(hit);
+      if(!actorId&&id==='PORTAL')this.riddleReveal.reveal(performance.now());
+      else this.riddleReveal.dismiss();
       if (actorId) this.config.onActor?.(actorId);
       else if (id === 'PORTAL') this.config.onPortal?.();
       else if (id) this.config.onHex?.(id);
     });
-    this.canvas.addEventListener('pointerleave', () => {
+    this.canvas.addEventListener('pointerleave', event => {
       this.pointerStart = null;
       this.hovered = null;
+      // Touch emits pointerleave after a tap; keep its short reading window.
+      if(event.pointerType!=='touch')this.riddleReveal.dismiss();
       this.canvas.style.cursor = 'grab';
       this.config.onHover?.(null);
       this.highlightRoot.children.forEach(child => {
@@ -915,6 +922,8 @@ export class TabokTrue3DBoard {
         if (child.material) child.material.opacity = child.userData.baseOpacity;
       });
     });
+    this.canvas.addEventListener('pointercancel', () => { this.pointerStart=null;this.riddleReveal.dismiss(); });
+    this.canvas.addEventListener('keydown', event => { if(event.key==='Escape')this.riddleReveal.dismiss(); });
   }
 
   pick(event) {
@@ -1217,8 +1226,18 @@ export class TabokTrue3DBoard {
     for(const [id,prop]of this.treasureProps)prop.visible=present.has(id);
     if(state.riddle&&state.riddle!==this.riddleText){this.riddleText=state.riddle;
       const c=document.createElement('canvas');c.width=1024;c.height=320;const ctx=c.getContext('2d');ctx.fillStyle='rgba(17,10,28,.88)';ctx.fillRect(0,0,1024,320);ctx.strokeStyle='#ab87bd';ctx.lineWidth=3;ctx.strokeRect(9,9,1006,302);ctx.fillStyle='#ead8fa';ctx.font='italic 44px Georgia';ctx.textAlign='center';const lines=[];let line='';for(const word of state.riddle.split(' ')){if(ctx.measureText(line+' '+word).width>910&&line){lines.push(line);line=word}else line+=(line?' ':'')+word}lines.push(line);lines.forEach((text,i)=>ctx.fillText(text,512,90+i*52));ctx.font='26px Georgia';ctx.fillStyle='#e4c991';ctx.fillText('One answer + Sun Shard + Moon Pearl',512,280);
-      const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;if(!this.riddleSprite){this.riddleSprite=new THREE.Sprite(new THREE.SpriteMaterial({map,depthWrite:false}));this.scene.add(this.riddleSprite)}else{this.riddleSprite.material.map.dispose();this.riddleSprite.material.map=map;this.riddleSprite.material.needsUpdate=true}this.riddleSprite.position.copy(worldFor('0,11'));this.riddleSprite.position.y=3.3;this.riddleSprite.scale.set(7.4,2.31,1);
+      const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;if(!this.riddleSprite){this.riddleSprite=new THREE.Sprite(new THREE.SpriteMaterial({map,depthWrite:false,transparent:true,opacity:0}));this.scene.add(this.riddleSprite)}else{this.riddleSprite.material.map.dispose();this.riddleSprite.material.map=map;this.riddleSprite.material.needsUpdate=true}this.riddleSprite.position.copy(worldFor('0,11'));this.riddleSprite.position.y=3.3;this.riddleSprite.scale.set(7.4,2.31,1);
+      this.riddleReveal.reset();this.riddleSprite.visible=false;this.riddleSprite.material.opacity=0;
     }
+  }
+
+  updateRiddleReveal(now) {
+    if(!this.riddleSprite)return;
+    const view=this.riddleReveal.sample(now,this.reducedMotion);
+    this.riddleSprite.visible=view.visible;
+    this.riddleSprite.material.opacity=view.opacity;
+    this.riddleSprite.position.y=view.y;
+    this.riddleSprite.scale.set(7.4*view.scale,2.31*view.scale,1);
   }
 
   syncItems(state) {
@@ -1593,6 +1612,7 @@ export class TabokTrue3DBoard {
 
   render() {
     const now = performance.now();
+    this.updateRiddleReveal(now);
     if (this.suspended || this.presentationPaused) return;
     this.tuneResolution(now);
     const time = (now - this.startedAt) / 1000;
