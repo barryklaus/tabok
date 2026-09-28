@@ -17,7 +17,7 @@ test('all 20 numbered triangles face outward and every forced D20 result lands f
 });
 test('dice redesign preserves the treasure odds and reuses ready resources',async()=>{
  const{d}=await board();const treasure=d.buildDice('Treasure',0);assert.deepEqual(treasure.userData.labels,['CHOOSE','CHOOSE','CHOOSE','BLANK','BLANK','BLANK']);
- const rune=d.buildDice('Rune',0);assert.deepEqual(rune.userData.labels,['WARP','DOUBLE','PHASE','BALANCE','FORTUNE','TIME']);
+ const rune=d.buildDice('Rune',0);assert.deepEqual(rune.userData.labels,['WARP','DOUBLE','PHASE','HEIST','FORTUNE','TIME']);
  const action=d.buildDice('Action',0);assert.deepEqual(action.userData.labels,['TAKE','TAKE','TAKE','GIVE','GIVE','STEAL']);
  const first=d.buildOfferDie(0),resource=d.dieResources.get('Offer|'+first.userData.labels.join(','));d.clearDice();const second=d.buildOfferDie(0);assert.equal(d.dieResources.get('Offer|'+second.userData.labels.join(',')),resource);assert.equal(first.children[0].geometry,second.children[0].geometry);
  d.clearDice();const life=d.buildDice('Last Chance',0,Array.from({length:20},(_,index)=>index+1));assert.equal(life.userData.kind,'Offer');assert.deepEqual(life.userData.labels,first.userData.labels);assert.equal(life.children[0].geometry,first.children[0].geometry);

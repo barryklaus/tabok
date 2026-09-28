@@ -89,6 +89,7 @@ function rune(ctx,label,p){
   if(label==='×2'||label==='×3'||label==='DOUBLE'){ctx.font='bold 148px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label==='DOUBLE'?'×2':label,256,265);return;}
   if(label==='WARP'){ctx.beginPath();ctx.arc(256,256,104,0,Math.PI*1.65);ctx.stroke();path(ctx,[[162,214],[151,259],[194,243]]);ctx.stroke();ctx.beginPath();ctx.arc(256,256,48,Math.PI*.2,Math.PI*1.85);ctx.stroke();}
   else if(label==='PHASE'){ctx.globalAlpha=.9;for(const x of[202,256,310]){ctx.beginPath();ctx.ellipse(x,256,25,105,0,0,Math.PI*2);ctx.stroke();}ctx.globalAlpha=1;}
+  else if(label==='HEIST'){path(ctx,[[150,190],[362,190],[334,310],[256,346],[178,310]],true);ctx.stroke();for(const x of[210,302]){ctx.beginPath();ctx.ellipse(x,247,25,14,0,0,Math.PI*2);ctx.stroke()}}
   else if(label==='BALANCE'){path(ctx,[[256,137],[256,349]]);ctx.stroke();path(ctx,[[180,188],[332,188]]);ctx.stroke();for(const x of[184,328]){path(ctx,[[x,188],[x-35,267],[x+35,267]],true);ctx.stroke();}}
   else if(label==='FORTUNE'){star(ctx,256,256,105);ctx.beginPath();ctx.arc(256,256,49,0,Math.PI*2);ctx.stroke();}
   else if(label==='TIME'){ctx.beginPath();ctx.arc(256,256,105,0,Math.PI*2);ctx.stroke();path(ctx,[[256,256],[256,184],[311,230]]);ctx.stroke();}

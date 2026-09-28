@@ -8,7 +8,7 @@
     const children = [...body.children];
     const hud = document.createElement('section');
     hud.className = 'ritual-hud';
-    hud.innerHTML = '<div class="ritual-hud-kicker">The living artifact</div><div class="ritual-hud-title"><b>The Crossing</b><span id="ritualStatus">AWAITING FATE</span></div><div class="ritual-hud-stats"><span class="ritual-hud-stat"><small>RELIC</small><b id="ritualRelic">0</b></span><span class="ritual-hud-stat"><small>ODDITY</small><b id="ritualOddity">0</b></span><span class="ritual-hud-stat"><small>KEEPSAKE</small><b id="ritualKeepsake">0</b></span></div>';
+    hud.innerHTML = '<div class="ritual-hud-kicker">The living artifact</div><div class="ritual-hud-title"><b>The Crossing</b><span id="ritualStatus">AWAITING FATE</span></div><div class="ritual-hud-stats"><span class="ritual-hud-stat"><small>SUN SHARDS</small><b id="ritualRelic">0</b></span><span class="ritual-hud-stat"><small>MOON PEARLS</small><b id="ritualOddity">0</b></span><span class="ritual-hud-stat"><small>ARTIFACTS</small><b id="ritualKeepsake">0</b></span></div>';
     const details = document.createElement('details');
     details.className = 'ritual-codex';
     details.innerHTML = '<summary>Rules &amp; Codex</summary><div class="ritual-codex-body"></div>';

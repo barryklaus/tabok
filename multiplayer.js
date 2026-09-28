@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v1.5.7 Solid Passage · P3';
+  const VERSION = 'v2.0.0 Riddle Crossing · R1';
   const TOKEN_KEY = 'tabok-multiplayer-token';
   const NAME_KEY = 'tabok-multiplayer-name';
   const ACTIVE_ROOM_KEY = 'tabok-active-guest-room';
@@ -182,6 +182,7 @@
       peer.on('connection', acceptConnection);
       renderRoom();
       installHostObservers();
+      scheduleInitiativeRolls();
     });
   }
 
@@ -658,13 +659,13 @@
 
   function captureUI() {
     const player=game&&active(),turn=game?.turn;
-    const diceView=player&&turn?.type==='SELECTED'&&['choose','roll'].includes(game.phase)?{
+    const diceView=game?.heistRoll||(player&&turn?.type==='SELECTED'&&['choose','roll'].includes(game.phase)?{
       phase:game.phase,selected:turn.selectedDice||[],
       specs:window.TabokDiceSelection.available(player).map(label=>({label,
         faces:label==='Movement'?MOVE:label==='Treasure'?TREASURE_FACES:label==='Rune'?RUNE_FAMILIES[player.runeFamily||'WAYFARER']:Array.from({length:20},(_,i)=>i+1),
         result:game.phase==='roll'?(label==='Movement'?turn.baseMove:label==='Treasure'?turn.treasure:label==='Rune'?turn.runeFace:turn.offerRoll):undefined
       }))
-    }:null;
+    }:null);
     return {
       diceView,
       eye:els.eye.textContent,title:els.title.textContent,instruction:els.instruction.textContent,dice:els.dice.innerHTML,guidance:{className:els.guidance.className,html:els.guidance.innerHTML},controls:els.controls.innerHTML,event:els.event.textContent,portalState:els.portal.querySelector('.eclipse-well')?.dataset.state||'idle',actionDecision:{className:els.actionDecision.className,body:els.actionDecisionBody.innerHTML,kicker:els.actionDecision.querySelector('.action-decision-kicker').textContent},
@@ -694,7 +695,7 @@
 
   function localOwnsSlot(slot) { return seatForSlot(slot)?.owner === token; }
   function localOwnsActive() { return !!(game && active() && localOwnsSlot(active().p)); }
-  function localCanViewTurnRoll(player = active()) {const challenged=els.turnRoll.dataset.challengePlayer||game?.challengePlayer;if(!room)return !!player;const visiblePhase=game?.phase==='choose'||game?.phase==='roll'||challenged===player?.p;return !!(room.phase==='game'&&player&&visiblePhase&&(player.controller==='cpu'||localOwnsSlot(player.p)));}
+  function localCanViewTurnRoll(player = active()) {const challenged=els.turnRoll.dataset.challengePlayer||game?.challengePlayer;if(!room)return !!player;const visiblePhase=game?.phase==='choose'||game?.phase==='roll'||game?.phase==='heist'||challenged===player?.p;return !!(room.phase==='game'&&player&&visiblePhase&&(player.controller==='cpu'||localOwnsSlot(player.p)));}
   function route3DHex(id) {
     if (!room || room.phase !== 'game') return false;
     if (!localOwnsActive()) { showRoomNotice('Waiting for the assigned Traveler on their device.'); return true; }
@@ -744,7 +745,7 @@
     if(target.closest('.portal-target'))return{kind:'portal'};
     const button=target.closest('button'); if(!button)return null;
     if(button.id)return{kind:'button',id:button.id,scope:button.closest('#messageOverlay')||(button.closest('#turnRollOverlay')&&(els.turnRoll.dataset.challengePlayer||game?.challengePlayer))?'message':'game'};
-    const dataKeys=['diceChoice','turnType','offerType','offerTarget','offerDiscard','groupAnswer','answerIndex','trivia','replace','runePower','runeTarget','plunderAdd','plunderRemove','plunderBack','plunderConfirm'];
+    const dataKeys=['diceChoice','turnType','offerType','offerTarget','offerDiscard','artifact','treasureSite','heistTarget','portalArtifact','groupAnswer','answerIndex','trivia','replace','runePower','runeTarget','plunderAdd','plunderRemove','plunderBack','plunderConfirm'];
     const data={}; dataKeys.forEach(key=>{if(button.dataset[key]!==undefined)data[key]=button.dataset[key]});
     return{kind:'button',data,aria:button.getAttribute('aria-label')||'',text:button.textContent.trim().replace(/\s+/g,' '),scope:button.closest('#messageOverlay')?'message':'game'};
   }

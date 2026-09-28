@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createTreasureModel } from './treasure-models.js?v=20260928R1';
 import { createGuardianStatue } from './guardian-statues.js?v=20260915P1';
 import { createCosmicSanctuary } from './cosmic-sanctuary.js?v=20260915D2';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -615,9 +616,9 @@ export class TabokTrue3DBoard {
     }
   }
 
-  syncDormantJudges(remaining=6) {
+  syncDormantJudges(remaining=6,awakeStatues=null) {
     const awakened=6-Math.max(0,Math.min(6,Number(remaining)||0));
-    this.dormantJudges?.forEach((judge,index)=>{if(judge.parent===this.dormantJudgeRoot)judge.visible=index>=awakened});
+    this.dormantJudges?.forEach((judge,index)=>{if(judge.parent===this.dormantJudgeRoot)judge.visible=awakeStatues?!awakeStatues.includes(index+1):index>=awakened});
   }
 
   makeBoard() {
@@ -1205,7 +1206,23 @@ export class TabokTrue3DBoard {
     glow.visible = !group.userData.cinematicLocks;
   }
 
+  syncTreasureProps(state) {
+    if(!this.treasureRoot){this.treasureRoot=new THREE.Group();this.scene.add(this.treasureRoot);this.treasureProps=new Map()}
+    const present=new Set();
+    for(const item of state.treasures||[]){present.add(item.id);let prop=this.treasureProps.get(item.id);
+      if(!prop){prop=createTreasureModel(item.name);this.treasureProps.set(item.id,prop);this.treasureRoot.add(prop);
+        const c=document.createElement('canvas');c.width=256;c.height=64;const ctx=c.getContext('2d');ctx.fillStyle='rgba(15,10,22,.85)';ctx.fillRect(0,0,256,64);ctx.fillStyle='#f1dfbc';ctx.font='28px Georgia';ctx.textAlign='center';ctx.fillText(item.name,128,41);const texture=new THREE.CanvasTexture(c);texture.colorSpace=THREE.SRGBColorSpace;const label=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthWrite:false}));label.position.y=1.05;label.scale.set(1.45,.36,1);prop.add(label);
+      }prop.visible=true;prop.position.copy(worldFor(item.pos));prop.position.y=.1;
+    }
+    for(const [id,prop]of this.treasureProps)prop.visible=present.has(id);
+    if(state.riddle&&state.riddle!==this.riddleText){this.riddleText=state.riddle;
+      const c=document.createElement('canvas');c.width=1024;c.height=320;const ctx=c.getContext('2d');ctx.fillStyle='rgba(17,10,28,.88)';ctx.fillRect(0,0,1024,320);ctx.strokeStyle='#ab87bd';ctx.lineWidth=3;ctx.strokeRect(9,9,1006,302);ctx.fillStyle='#ead8fa';ctx.font='italic 44px Georgia';ctx.textAlign='center';const lines=[];let line='';for(const word of state.riddle.split(' ')){if(ctx.measureText(line+' '+word).width>910&&line){lines.push(line);line=word}else line+=(line?' ':'')+word}lines.push(line);lines.forEach((text,i)=>ctx.fillText(text,512,90+i*52));ctx.font='26px Georgia';ctx.fillStyle='#e4c991';ctx.fillText('One answer + Sun Shard + Moon Pearl',512,280);
+      const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;if(!this.riddleSprite){this.riddleSprite=new THREE.Sprite(new THREE.SpriteMaterial({map,depthWrite:false}));this.scene.add(this.riddleSprite)}else{this.riddleSprite.material.map.dispose();this.riddleSprite.material.map=map;this.riddleSprite.material.needsUpdate=true}this.riddleSprite.position.copy(worldFor('0,11'));this.riddleSprite.position.y=3.3;this.riddleSprite.scale.set(7.4,2.31,1);
+    }
+  }
+
   syncItems(state) {
+    this.syncTreasureProps(state);
     const signature = JSON.stringify([state.equipment, state.runes]);
     if (signature === this.itemSignature) return;
     this.itemSignature = signature;
@@ -1276,7 +1293,7 @@ export class TabokTrue3DBoard {
     actors.forEach(actor => this.syncActor(actor));
     // Run after removals so reclaimed Judge sculptures receive the visibility
     // that belongs to the incoming state (not the state that just ended).
-    this.syncDormantJudges(state.dormantJudges);
+    this.syncDormantJudges(state.dormantJudges,state.awakeStatues);
     this.syncItems(state);
     this.syncLegalHighlights(state);
   }

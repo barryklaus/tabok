@@ -2,8 +2,8 @@
 (function(root){
   'use strict';
   const names=['Movement','Treasure','Rune','Offer'];
-  const faces={Movement:['1','2','3','4','5','6'],Treasure:['CHOOSE','CHOOSE','CHOOSE','BLANK','BLANK','BLANK'],Rune:['WARP','DOUBLE','PHASE','BALANCE','FORTUNE','TIME'],Offer:Array.from({length:20},(_,i)=>String(i+1))};
-  const symbols={CHOOSE:'◇',BLANK:'—',WARP:'↗',DOUBLE:'×2',PHASE:'⬡',BALANCE:'⚖',FORTUNE:'✦',TIME:'⌛'};
+  const faces={Movement:['1','2','3','4','5','6'],Treasure:['CHOOSE','CHOOSE','CHOOSE','BLANK','BLANK','BLANK'],Rune:['WARP','DOUBLE','PHASE','HEIST','FORTUNE','TIME'],Offer:Array.from({length:20},(_,i)=>String(i+1))};
+  const symbols={CHOOSE:'◇',BLANK:'—',WARP:'↗',DOUBLE:'×2',PHASE:'⬡',HEIST:'♧',BALANCE:'⚖',FORTUNE:'✦',TIME:'⌛'};
   const available=player=>names.filter(name=>name==='Rune'?Boolean(player?.rune):name==='Offer'?Boolean(player?.inventory?.some(count=>count>0)):true);
   const normalize=(selection,allowed=names)=>names.filter(name=>allowed.includes(name)&&Array.isArray(selection)&&selection.includes(name));
   // Twenty real triangular planes form the Offering icosahedron, not a D6 skin.

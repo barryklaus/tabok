@@ -1,6 +1,18 @@
 # TABOK — The Crossing
 
-Version: **v1.5.9 — Crystal Dice · 2026.09.16.D4**
+Version: **v2.0.0 — Riddle Crossing · 2026.09.28.R1**
+
+## v2.0.0 — Riddle Crossing
+
+- Each expedition chooses a riddle from 1,200 entries (100 per artifact; 75% Hard, 20% Medium, 5% Easy), then places six distinct artifacts from twelve. Every accepted answer is guaranteed to be among the six.
+- Cross with **one accepted artifact + one Sun Shard + one Moon Pearl**. Up to three artifact identities may answer a riddle; they are alternatives, not a three-artifact cost. The clue floats above the portal and also appears in the ledger.
+- Twelve visible common-treasure sites refresh next round. Walking over treasure collects it; Treasure CHOOSE reaches one ready common site on the same or an adjacent open hex. The old treasure pool is retired.
+- Unique artifacts have distinct 3D models and named inventories. Offering or stealing transfers the actual artifact; crossing, discarding, or death returns it to a free board hex.
+- Every treasure pickup awakens the nearest sleeping statue. Portal rejection no longer awakens statues. Awakening all six summons the Seventh. Sleeping statues also block movement.
+- Rune faces: Warp, Double, Phase, Heist, Fortune, Time. Heist attempts to steal a rival artifact with the existing D20: 1–9 fail, 10 reroll, 11–20 succeed. Fortune collects a nearby ready common treasure. Other movement/time rules are retained; all movement respects occupied hexes.
+- CPU goals use visible treasure locations and clue keywords, never the accepted-answer list or future rolls. Existing read-only CPU dice and multiplayer authority are retained.
+- This is the first playable treasure/riddle implementation, not a guarantee of three winners: monster damage and player decisions can still prevent crossing. Party balance and clue quality will benefit from playtesting.
+- Validation: 101 automated checks pass, including all 1,200 riddle setups, artifact conservation, Heist rerolls, board occupancy and all fourteen 3D treasure models. A local browser CPU match collected treasure, awakened statues and achieved a successful crossing with no reported browser errors. Cross-device multiplayer and mobile visual testing remain follow-up checks.
 
 ## v1.5.9 — Crystal Dice
 

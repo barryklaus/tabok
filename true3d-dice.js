@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { simulateDiceThrow, sampleDiceThrow } from './dice-physics.js?v=20260915D1';
-import { faceTexture, offerFaceTexture, DICE_PALETTES, preloadTreasureIcons } from './dice-reference-art.js?v=20260916D4';
+import { faceTexture, offerFaceTexture, DICE_PALETTES, preloadTreasureIcons } from './dice-reference-art.js?v=20260928R1';
 await preloadTreasureIcons();
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
@@ -13,7 +13,7 @@ const FACE_SETS = {
   Movement: ['1', '2', '3', '4', '5', '6'],
   Treasure: ['CHOOSE', 'CHOOSE', 'CHOOSE', 'BLANK', 'BLANK', 'BLANK'],
   Action: ['TAKE', 'TAKE', 'TAKE', 'GIVE', 'GIVE', 'STEAL'],
-  Rune: ['WARP', 'DOUBLE', 'PHASE', 'BALANCE', 'FORTUNE', 'TIME'],
+  Rune: ['WARP', 'DOUBLE', 'PHASE', 'HEIST', 'FORTUNE', 'TIME'],
   Offer: Array.from({length:20},(_,index)=>String(index+1))
 };
 
